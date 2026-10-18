@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Finance Tracker Dashboard</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN for interactive charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .modal-enter { opacity: 0; transform: scale(0.95); }
+        .modal-enter-active { opacity: 1; transform: scale(1); transition: opacity 300ms, transform 300ms; }
+        .modal-exit { opacity: 1; transform: scale(1); }
+        .modal-exit-active { opacity: 0; transform: scale(0.95); transition: opacity 300ms, transform 300ms; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-full flex flex-col antialiased selection:bg-emerald-100 selection:text-emerald-900">
+
+    <!-- Notification Toast Container -->
+    <div id="toast-container" class="fixed bottom-20 sm:bottom-8 right-4 sm:right-8 z-[70] flex flex-col space-y-3 pointer-events-none"></div>
+
+    <!-- Top Navigation Header -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm backdrop-blur-md bg-white/90">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-2xl bg-emerald-500 flex items-center justify-center text-white shadow-lg shadow-emerald-500/30">
+                    <i class="fa-solid fa-wallet text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-extrabold text-slate-900 flex items-center gap-2 tracking-tight">
+                        Finance Dashboard 
+                        <span class="hidden sm:inline-block text-[10px] px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 font-bold uppercase tracking-wider">Private</span>
+                    </h1>
+                    <p class="text-xs font-medium text-slate-500 hidden sm:block">Data saved securely to your device</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3">
+                <button onclick="openSettingsModal()" class="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all cursor-pointer" title="Financial Settings">
+                    <i class="fa-solid fa-gear text-lg"></i>
+                </button>
+                <button onclick="openModal()" class="hidden md:flex bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-emerald-600/20 transition-all items-center gap-2 cursor-pointer active:scale-95">
+                    <i class="fa-solid fa-plus"></i> Add Transaction
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Floating Action Button for Mobile -->
+    <button onclick="openModal()" class="fixed bottom-6 right-6 z-40 md:hidden w-14 h-14 bg-emerald-600 text-white rounded-full shadow-xl shadow-emerald-600/40 flex items-center justify-center text-xl hover:bg-emerald-700 transition-transform active:scale-90">
+        <i class="fa-solid fa-plus"></i>
+    </button>
+
+    <!-- Main Content Layout -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+        <!-- Month Selector & Streak Bar -->
+        <section class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-slate-50 text-slate-600 border border-slate-100 flex items-center justify-center">
+                    <i class="fa-solid fa-calendar-day text-base"></i>
+                </div>
+                <div>
+                    <h2 class="text-sm font-bold text-slate-800">Financial Period</h2>
+                    <p class="text-xs font-medium text-slate-500">Dashboard syncs with selected month</p>
+                </div>
+            </div>
+            <div class="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+                <div class="flex items-center gap-2 bg-orange-50 border border-orange-100 px-4 py-2.5 rounded-xl shadow-sm w-full sm:w-auto justify-center">
+                    <i class="fa-solid fa-fire text-orange-500"></i>
+                    <span class="text-sm font-bold text-orange-700"><span id="streak-count">0</span> Day Streak</span>
+                </div>
+                <select id="active-month-select" onchange="changeActiveMonth()" class="w-full sm:w-auto px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer hover:bg-slate-100 transition-colors shadow-sm">
+                    <!-- Populated dynamically -->
+                </select>
+            </div>
+        </section>
+
+        <!-- Section 1: Overview Cards -->
+        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            <!-- Stipend / Income Card -->
+            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                <div class="absolute -right-6 -top-6 w-32 h-32 bg-gradient-to-br from-emerald-50 to-emerald-100/50 rounded-full opacity-60 group-hover:scale-125 transition-transform duration-700 pointer-events-none"></div>
+                <div class="relative z-10">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-xs font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">Income</span>
+                        <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                            <i class="fa-solid fa-arrow-trend-up text-xs"></i>
+                        </div>
+                    </div>
+                    <div class="text-3xl font-extrabold text-slate-900 mb-1 tracking-tight" id="card-income">₹0</div>
+                    <p class="text-xs font-semibold text-slate-400">Monthly baseline</p>
+                </div>
+            </div>
+
+            <!-- Fixed Cost Card -->
+            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                <div class="absolute -right-6 -top-6 w-32 h-32 bg-gradient-to-br from-rose-50 to-rose-100/50 rounded-full opacity-60 group-hover:scale-125 transition-transform duration-700 pointer-events-none"></div>
+                <div class="relative z-10">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-xs font-bold uppercase tracking-wider text-rose-600 bg-rose-50 px-2 py-1 rounded-md">Fixed Costs</span>
+                        <div class="w-8 h-8 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center">
+                            <i class="fa-solid fa-lock text-xs"></i>
+                        </div>
+                    </div>
+                    <div class="text-3xl font-extrabold text-slate-900 mb-1 tracking-tight" id="card-fixed">₹0</div>
+                    <p class="text-xs font-semibold text-slate-400">Needs every month</p>
+                </div>
+            </div>
+
+            <!-- SIP / Investment Card -->
+            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                <div class="absolute -right-6 -top-6 w-32 h-32 bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-full opacity-60 group-hover:scale-125 transition-transform duration-700 pointer-events-none"></div>
+                <div class="relative z-10">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-xs font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2 py-1 rounded-md">Target Inv.</span>
+                        <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
+                            <i class="fa-solid fa-seedling text-xs"></i>
+                        </div>
+                    </div>
+                    <div class="text-3xl font-extrabold text-slate-900 mb-1 tracking-tight" id="card-sip">₹0</div>
+                    <p class="text-xs font-semibold text-slate-400">Pay yourself first</p>
+                </div>
+            </div>
+
+            <!-- Free Money Card -->
+            <div class="bg-slate-900 rounded-2xl p-6 shadow-lg shadow-slate-900/20 hover:shadow-xl transition-shadow relative overflow-hidden group border border-slate-800">
+                <div class="absolute -right-6 -top-6 w-32 h-32 bg-gradient-to-br from-emerald-500/10 to-emerald-400/5 rounded-full opacity-100 group-hover:scale-150 transition-transform duration-700 pointer-events-none"></div>
+                <div class="relative z-10">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-xs font-bold uppercase tracking-wider text-emerald-400 bg-emerald-400/10 px-2 py-1 rounded-md border border-emerald-400/20">Free Money</span>
+                        <div class="w-8 h-8 rounded-full bg-white/10 text-white flex items-center justify-center backdrop-blur-sm border border-white/10">
+                            <i class="fa-solid fa-wallet text-xs"></i>
+                        </div>
+                    </div>
+                    <div class="text-3xl font-extrabold text-white mb-1 tracking-tight" id="card-free">₹0</div>
+                    <p class="text-xs font-medium text-slate-400" id="card-free-subtitle">Remaining flexible budget</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Analytics / Doughnut Chart -->
+        <section class="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm flex flex-col items-center justify-center relative overflow-hidden min-h-[400px]">
+            <!-- Decorative Glow Effects -->
+            <div class="absolute -right-20 -top-20 w-80 h-80 bg-emerald-400/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -left-20 -bottom-20 w-80 h-80 bg-blue-400/10 rounded-full blur-3xl pointer-events-none"></div>
+            
+            <div class="w-full text-center mb-6 relative z-10">
+                <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Monthly Expense Breakdown</h2>
+                <p class="text-sm font-medium text-slate-500 mt-1">A visual summary of where your money went this month</p>
+            </div>
+            
+            <div class="relative w-full max-w-md flex-1 flex items-center justify-center z-10">
+                <canvas id="categoryChart"></canvas>
+            </div>
+        </section>
+
+        <!-- Section 3: Expense Log Table -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-slate-50/50">
+                <div>
+                    <h2 class="text-lg font-extrabold text-slate-900 flex items-center gap-2">
+                        Recent Transactions
+                    </h2>
+                    <p class="text-sm font-medium text-slate-500">Every recorded log in one place</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                    <div class="relative flex-1 md:w-64">
+                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                            <i class="fa-solid fa-search text-sm"></i>
+                        </span>
+                        <input type="text" id="search-input" oninput="filterExpenses()" placeholder="Search logs..." class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-shadow shadow-sm placeholder:text-slate-400">
+                    </div>
+                    <div class="relative">
+                        <select id="category-filter" onchange="filterExpenses()" class="appearance-none pl-4 pr-10 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-shadow shadow-sm cursor-pointer min-w-[140px]">
+                            <option value="">All Categories</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
+                            <i class="fa-solid fa-filter text-xs"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto custom-scrollbar">
+                <table class="w-full text-left border-collapse whitespace-nowrap">
+                    <thead>
+                        <tr class="text-[11px] font-bold text-slate-400 uppercase tracking-widest bg-white border-b border-slate-100">
+                            <th class="py-4 px-6">Name</th>
+                            <th class="py-4 px-6">Amount</th>
+                            <th class="py-4 px-6">Date</th>
+                            <th class="py-4 px-6">Category</th>
+                            <th class="py-4 px-6">Payment</th>
+                            <th class="py-4 px-6 text-center">Inv.</th>
+                            <th class="py-4 px-6 text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="expense-tbody" class="divide-y divide-slate-100 text-sm bg-white">
+                        <!-- Dynamically populated -->
+                    </tbody>
+                </table>
+            </div>
+            <div id="no-expenses" class="hidden text-center py-20 bg-white">
+                <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-5 text-slate-300 text-3xl shadow-inner border border-slate-100">
+                    <i class="fa-solid fa-receipt"></i>
+                </div>
+                <h3 class="text-base font-bold text-slate-800 mb-1">No transactions found</h3>
+                <p class="text-sm font-medium text-slate-500 mb-5">It looks quiet here for this month.</p>
+                <button onclick="openModal()" class="text-sm font-bold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 px-4 py-2 rounded-lg transition-colors border border-emerald-100">Log an Expense &rarr;</button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-50 border-t border-slate-200 mt-12 py-8 text-center text-xs font-medium text-slate-400">
+        <p>Interactive Finance Tracker Dashboard • Private Local Storage • Responsive Design</p>
+    </footer>
+
+    <!-- Log Expense Modal -->
+    <div id="expense-modal" class="fixed inset-0 z-[60] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden transition-opacity duration-300 opacity-0">
+        <div class="bg-white rounded-[2rem] max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-100 transform scale-95 transition-transform duration-300 relative overflow-hidden" id="expense-modal-content">
+            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-400 to-teal-500"></div>
+            
+            <div class="flex items-center justify-between mb-8 mt-2">
+                <div>
+                    <h3 class="text-2xl font-extrabold text-slate-900 tracking-tight">Add Transaction</h3>
+                    <p class="text-sm font-medium text-slate-500 mt-1">Log a new expense or investment</p>
+                </div>
+                <button onclick="closeModal()" class="w-10 h-10 rounded-full bg-slate-100 text-slate-500 hover:bg-rose-50 hover:text-rose-600 flex items-center justify-center transition-colors cursor-pointer">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <form id="expense-form" onsubmit="handleFormSubmit(event)" class="space-y-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Expense Name</label>
+                        <input type="text" id="exp-name" required placeholder="e.g. Swiggy Lunch" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Amount (₹)</label>
+                        <input type="number" step="0.01" id="exp-amount" required placeholder="0.00" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all shadow-sm">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Date</label>
+                        <input type="date" id="exp-date" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all shadow-sm cursor-pointer">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Category</label>
+                        <div class="relative">
+                            <select id="exp-category" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all shadow-sm cursor-pointer appearance-none">
+                                <!-- Populated dynamically -->
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
+                                <i class="fa-solid fa-chevron-down text-xs"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 gap-5">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Payment Method</label>
+                        <div class="flex flex-wrap gap-2" id="payment-chips">
+                            <label class="cursor-pointer">
+                                <input type="radio" name="payment-method" value="UPI" class="peer sr-only" checked>
+                                <div class="px-4 py-2 rounded-lg border border-slate-200 bg-slate-50 text-sm font-semibold text-slate-600 peer-checked:bg-emerald-50 peer-checked:border-emerald-500 peer-checked:text-emerald-700 transition-all hover:bg-slate-100">UPI</div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="payment-method" value="Credit Card" class="peer sr-only">
+                                <div class="px-4 py-2 rounded-lg border border-slate-200 bg-slate-50 text-sm font-semibold text-slate-600 peer-checked:bg-emerald-50 peer-checked:border-emerald-500 peer-checked:text-emerald-700 transition-all hover:bg-slate-100">Credit Card</div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="payment-method" value="Cash" class="peer sr-only">
+                                <div class="px-4 py-2 rounded-lg border border-slate-200 bg-slate-50 text-sm font-semibold text-slate-600 peer-checked:bg-emerald-50 peer-checked:border-emerald-500 peer-checked:text-emerald-700 transition-all hover:bg-slate-100">Cash</div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="payment-method" value="Bank Transfer" class="peer sr-only">
+                                <div class="px-4 py-2 rounded-lg border border-slate-200 bg-slate-50 text-sm font-semibold text-slate-600 peer-checked:bg-emerald-50 peer-checked:border-emerald-500 peer-checked:text-emerald-700 transition-all hover:bg-slate-100">Bank Transfer</div>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Investment Toggle -->
+                    <label class="flex items-center p-4 bg-blue-50/50 border border-blue-100 rounded-xl cursor-pointer hover:bg-blue-50 transition-colors group">
+                        <div class="relative flex items-center justify-center">
+                            <input type="checkbox" id="exp-investment" class="peer appearance-none w-6 h-6 border-2 border-blue-200 rounded bg-white checked:bg-blue-600 checked:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-all cursor-pointer">
+                            <i class="fa-solid fa-check absolute text-white text-xs opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity"></i>
+                        </div>
+                        <div class="ml-4 flex-1">
+                            <div class="text-sm font-bold text-blue-900 group-hover:text-blue-700 transition-colors">Mark as Investment / SIP</div>
+                            <div class="text-xs font-medium text-blue-600/70 mt-0.5">Check this if the transaction is towards savings or assets</div>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="pt-6 flex items-center justify-end space-x-3 border-t border-slate-100">
+                    <button type="button" onclick="closeModal()" class="px-5 py-3 rounded-xl bg-slate-100 text-slate-600 text-sm font-bold hover:bg-slate-200 transition-all cursor-pointer active:scale-95">Cancel</button>
+                    <button type="submit" class="px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold shadow-lg shadow-emerald-600/30 transition-all cursor-pointer flex items-center gap-2 active:scale-95">
+                        Save Transaction <i class="fa-solid fa-arrow-right text-xs ml-1"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="fixed inset-0 z-[60] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden transition-opacity duration-300 opacity-0">
+        <div class="bg-white rounded-[2rem] max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-100 transform scale-95 transition-transform duration-300 relative overflow-hidden" id="settings-modal-content">
+            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-400 to-indigo-500"></div>
+            
+            <div class="flex items-center justify-between mb-6 mt-2">
+                <div>
+                    <h3 class="text-2xl font-extrabold text-slate-900 tracking-tight">Financial Settings</h3>
+                    <p class="text-sm font-medium text-slate-500 mt-1">Set your personal monthly baseline</p>
+                </div>
+                <button onclick="closeSettingsModal()" class="w-10 h-10 rounded-full bg-slate-100 text-slate-500 hover:bg-rose-50 hover:text-rose-600 flex items-center justify-center transition-colors cursor-pointer">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="bg-blue-50/50 border border-blue-100 p-4 rounded-xl mb-6 flex gap-3">
+                <i class="fa-solid fa-shield-halved text-blue-500 mt-0.5"></i>
+                <p class="text-xs font-medium text-blue-800 leading-relaxed">
+                    These settings are saved <strong>only to your current browser</strong>. Anyone else opening this site will have a blank slate and cannot see your numbers.
+                </p>
+            </div>
+
+            <form id="settings-form" onsubmit="handleSettingsSubmit(event)" class="space-y-5">
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Monthly Income (₹)</label>
+                    <input type="number" id="set-income" required placeholder="e.g. 37000" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all shadow-sm">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Fixed Monthly Costs (₹)</label>
+                    <input type="number" id="set-fixed" required placeholder="e.g. 11667" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all shadow-sm">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Target Monthly Investment (₹)</label>
+                    <input type="number" id="set-invest" required placeholder="e.g. 8000" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all shadow-sm">
+                </div>
+
+                <div class="pt-4 border-t border-slate-100">
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Manage Categories</label>
+                    <div class="flex gap-2 mb-3">
+                        <input type="text" id="new-category-input" placeholder="New category name..." class="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <button type="button" onclick="addCustomCategory()" class="px-4 py-2 bg-blue-100 text-blue-700 hover:bg-blue-200 rounded-xl text-sm font-bold transition-colors cursor-pointer">Add</button>
+                    </div>
+                    <div id="settings-categories-list" class="max-h-32 overflow-y-auto space-y-2 custom-scrollbar pr-2">
+                        <!-- Dynamically populated -->
+                    </div>
+                </div>
+
+                <div class="pt-6 flex items-center justify-between border-t border-slate-100">
+                    <button type="button" onclick="resetSettingsToDefault()" class="text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors">Reset Defaults</button>
+                    <div class="space-x-2">
+                        <button type="button" onclick="closeSettingsModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-600 text-sm font-bold hover:bg-slate-200 transition-all cursor-pointer">Cancel</button>
+                        <button type="submit" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold shadow-lg shadow-blue-600/30 transition-all cursor-pointer">Save Changes</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Application JavaScript Logic -->
+    <script>
+        // Default App Settings
+        const defaultSettings = {
+            income: 37000,
+            fixedCost: 11667,
+            investment: 8000,
+            categories: ['Food — Ishtara', 'Food — Swiggy', 'Home', 'Personal', 'Subscription', 'Transport', 'Emergency', 'Other']
+        };
+
+        // Global State Variables
+        let appSettings = { ...defaultSettings };
+        let expenses = [];
+        let categoryChartInstance = null;
+        let selectedActiveMonth = "";
+
+        // Initialization
+        function initApp() {
+            // Load Settings from Local Storage
+            const savedSettings = localStorage.getItem('finance_tracker_settings');
+            if (savedSettings) {
+                try { 
+                    appSettings = JSON.parse(savedSettings); 
+                    // Fallback for older saves that didn't have categories array
+                    if (!appSettings.categories) {
+                        appSettings.categories = [...defaultSettings.categories];
+                    }
+                } catch(e) { appSettings = { ...defaultSettings }; }
+            } else {
+                appSettings = { ...defaultSettings };
+                localStorage.setItem('finance_tracker_settings', JSON.stringify(appSettings));
+            }
+
+            // Load Expenses from Local Storage
+            const savedExpenses = localStorage.getItem('finance_tracker_v3');
+            if (savedExpenses) {
+                try { expenses = JSON.parse(savedExpenses); } catch(e) { expenses = []; }
+            }
+
+            // Default to current month
+            const now = new Date();
+            selectedActiveMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+            populateMonthDropdown();
+            populateCategoryDropdowns();
+            calculateStreak();
+            renderAll();
+        }
+
+        function saveExpenses() {
+            localStorage.setItem('finance_tracker_v3', JSON.stringify(expenses));
+        }
+
+        function saveSettings() {
+            localStorage.setItem('finance_tracker_settings', JSON.stringify(appSettings));
+        }
+
+        function populateMonthDropdown() {
+            const monthSelect = document.getElementById('active-month-select');
+            const monthsSet = new Set();
+            
+            // Always include current month
+            const now = new Date();
+            monthsSet.add(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`);
+
+            expenses.forEach(item => {
+                if (item.date && item.date.length >= 7) {
+                    monthsSet.add(item.date.substring(0, 7));
+                }
+            });
+
+            const sortedMonths = Array.from(monthsSet).sort().reverse();
+            let html = '';
+            
+            sortedMonths.forEach(ym => {
+                const [year, month] = ym.split('-');
+                const dateObj = new Date(year, parseInt(month) - 1, 1);
+                const monthName = dateObj.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+                const isSelected = ym === selectedActiveMonth ? 'selected' : '';
+                html += `<option value="${ym}" ${isSelected} class="font-semibold">${monthName}</option>`;
+            });
+
+            monthSelect.innerHTML = html;
+            if (monthSelect.value) selectedActiveMonth = monthSelect.value;
+        }
+
+        function changeActiveMonth() {
+            selectedActiveMonth = document.getElementById('active-month-select').value;
+            renderAll();
+        }
+
+        function populateCategoryDropdowns() {
+            const filterCatSelect = document.getElementById('category-filter');
+            const expCatSelect = document.getElementById('exp-category');
+            
+            let filterOptionsHtml = '<option value="">All Categories</option>';
+            let expOptionsHtml = '';
+            
+            // For filtering logs, include historical categories + current categories
+            const allFilterCats = [...new Set([...appSettings.categories, ...expenses.map(e => e.category)])].sort();
+            
+            allFilterCats.forEach(cat => {
+                filterOptionsHtml += `<option value="${cat}">${cat}</option>`;
+            });
+
+            // For adding new expenses, ONLY show current managed categories
+            const activeCats = [...appSettings.categories].sort();
+            activeCats.forEach(cat => {
+                expOptionsHtml += `<option value="${cat}">${cat}</option>`;
+            });
+
+            filterCatSelect.innerHTML = filterOptionsHtml;
+            if(expCatSelect) expCatSelect.innerHTML = expOptionsHtml;
+        }
+
+        function calculateStreak() {
+            // Find consecutive days with at least one transaction leading up to today
+            if (expenses.length === 0) {
+                document.getElementById('streak-count').innerText = "0";
+                return;
+            }
+
+            // Get unique dates sorted descending
+            const uniqueDates = [...new Set(expenses.map(e => e.date))].sort().reverse();
+            
+            let streak = 0;
+            let currentCheck = new Date(); // Start with today
+            currentCheck.setHours(0,0,0,0);
+
+            // Create a set of formatted date strings for easy lookup
+            const dateSet = new Set(uniqueDates);
+
+            // Check if there's an entry today or yesterday to start the streak
+            const todayStr = currentCheck.toISOString().split('T')[0];
+            
+            let yesterdayCheck = new Date(currentCheck);
+            yesterdayCheck.setDate(yesterdayCheck.getDate() - 1);
+            const yesterdayStr = yesterdayCheck.toISOString().split('T')[0];
+
+            let checkDate = new Date();
+            
+            if (dateSet.has(todayStr)) {
+                checkDate = new Date(currentCheck);
+            } else if (dateSet.has(yesterdayStr)) {
+                checkDate = new Date(yesterdayCheck);
+            } else {
+                // Streak broken
+                document.getElementById('streak-count').innerText = "0";
+                return;
+            }
+
+            // Count backwards
+            while(true) {
+                const dateStr = checkDate.toISOString().split('T')[0];
+                if (dateSet.has(dateStr)) {
+                    streak++;
+                    checkDate.setDate(checkDate.getDate() - 1); // move back one day
+                } else {
+                    break;
+                }
+            }
+
+            document.getElementById('streak-count').innerText = streak;
+        }
+
+        // Add Transaction Modal UX
+        function openModal() {
+            document.getElementById('exp-date').valueAsDate = new Date();
+            const modal = document.getElementById('expense-modal');
+            modal.classList.remove('hidden');
+            
+            requestAnimationFrame(() => {
+                modal.style.opacity = '1';
+                document.getElementById('expense-modal-content').classList.remove('scale-95');
+                document.getElementById('expense-modal-content').classList.add('scale-100');
+            });
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('expense-modal');
+            modal.style.opacity = '0';
+            document.getElementById('expense-modal-content').classList.remove('scale-100');
+            document.getElementById('expense-modal-content').classList.add('scale-95');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                document.getElementById('expense-form').reset();
+                document.querySelector('input[name="payment-method"][value="UPI"]').checked = true;
+            }, 300);
+        }
+
+        function handleFormSubmit(event) {
+            event.preventDefault();
+            const name = document.getElementById('exp-name').value;
+            const amount = parseFloat(document.getElementById('exp-amount').value);
+            const date = document.getElementById('exp-date').value;
+            const category = document.getElementById('exp-category').value || 'Other';
+            const paymentRadio = document.querySelector('input[name="payment-method"]:checked');
+            const payment = paymentRadio ? paymentRadio.value : 'UPI';
+            const isInvestment = document.getElementById('exp-investment').checked;
+
+            const newExpense = {
+                id: Date.now().toString(),
+                name,
+                amount,
+                date,
+                category,
+                payment,
+                isInvestment
+            };
+
+            expenses.unshift(newExpense);
+            saveExpenses();
+            
+            if (!document.querySelector(`#active-month-select option[value="${date.substring(0,7)}"]`)) {
+                populateMonthDropdown();
+            }
+            
+            if(selectedActiveMonth !== date.substring(0,7)) {
+                selectedActiveMonth = date.substring(0,7);
+                document.getElementById('active-month-select').value = selectedActiveMonth;
+            }
+
+            populateCategoryDropdowns();
+            calculateStreak();
+            renderAll();
+            closeModal();
+            showToast("Transaction logged successfully!", "success");
+        }
+
+        // Settings Modal UX
+        function openSettingsModal() {
+            // Populate current values
+            document.getElementById('set-income').value = appSettings.income;
+            document.getElementById('set-fixed').value = appSettings.fixedCost;
+            document.getElementById('set-invest').value = appSettings.investment;
+
+            renderCategoriesList();
+
+            const modal = document.getElementById('settings-modal');
+            modal.classList.remove('hidden');
+            
+            requestAnimationFrame(() => {
+                modal.style.opacity = '1';
+                document.getElementById('settings-modal-content').classList.remove('scale-95');
+                document.getElementById('settings-modal-content').classList.add('scale-100');
+            });
+        }
+
+        function closeSettingsModal() {
+            const modal = document.getElementById('settings-modal');
+            modal.style.opacity = '0';
+            document.getElementById('settings-modal-content').classList.remove('scale-100');
+            document.getElementById('settings-modal-content').classList.add('scale-95');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        function handleSettingsSubmit(event) {
+            event.preventDefault();
+            appSettings.income = parseFloat(document.getElementById('set-income').value) || 0;
+            appSettings.fixedCost = parseFloat(document.getElementById('set-fixed').value) || 0;
+            appSettings.investment = parseFloat(document.getElementById('set-invest').value) || 0;
+            
+            saveSettings();
+            calculateSummaryCards(); // Instantly update view
+            closeSettingsModal();
+            showToast("Settings updated for your browser.", "success");
+        }
+
+        function resetSettingsToDefault() {
+            if (confirm("Reset to default baselines and categories?")) {
+                appSettings = { ...defaultSettings };
+                document.getElementById('set-income').value = appSettings.income;
+                document.getElementById('set-fixed').value = appSettings.fixedCost;
+                document.getElementById('set-invest').value = appSettings.investment;
+                saveSettings();
+                renderCategoriesList();
+                populateCategoryDropdowns();
+                calculateSummaryCards();
+            }
+        }
+
+        function renderCategoriesList() {
+            const listEl = document.getElementById('settings-categories-list');
+            listEl.innerHTML = '';
+            appSettings.categories.forEach(cat => {
+                listEl.innerHTML += `
+                    <div class="flex items-center justify-between bg-slate-50 border border-slate-100 px-3 py-2 rounded-lg">
+                        <span class="text-sm font-semibold text-slate-700">${escapeHtml(cat)}</span>
+                        <button type="button" onclick="deleteCustomCategory('${escapeHtml(cat)}')" class="text-slate-400 hover:text-rose-500 transition-colors cursor-pointer p-1" title="Delete Category">
+                            <i class="fa-solid fa-trash-can text-xs pointer-events-none"></i>
+                        </button>
+                    </div>
+                `;
+            });
+        }
+
+        function addCustomCategory() {
+            const input = document.getElementById('new-category-input');
+            const newCat = input.value.trim();
+            if (newCat && !appSettings.categories.includes(newCat)) {
+                appSettings.categories.push(newCat);
+                saveSettings();
+                renderCategoriesList();
+                populateCategoryDropdowns();
+                input.value = '';
+                showToast("Category added", "success");
+            } else if (appSettings.categories.includes(newCat)) {
+                showToast("Category already exists", "info");
+            }
+        }
+
+        function deleteCustomCategory(cat) {
+            if (appSettings.categories.length <= 1) {
+                showToast("You must have at least one category.", "error");
+                return;
+            }
+            appSettings.categories = appSettings.categories.filter(c => c !== cat);
+            saveSettings();
+            renderCategoriesList();
+            populateCategoryDropdowns();
+            filterExpenses(); // Refresh table in case filtered by this category
+            showToast("Category removed", "info");
+        }
+
+        function deleteExpense(id) {
+            expenses = expenses.filter(item => item.id !== id);
+            saveExpenses();
+            populateMonthDropdown();
+            populateCategoryDropdowns();
+            calculateStreak();
+            renderAll();
+            showToast("Transaction deleted.", "info");
+        }
+
+        function getWeekNumber(d) {
+            d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+            d.setUTCDate(d.getDate() + 4 - (d.getUTCDay()||7));
+            var yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+            var weekNo = Math.ceil((((d - yearStart) / 86400000) + 1)/7);
+            return `Wk ${weekNo}`;
+        }
+
+        function renderAll() {
+            renderExpenseTable();
+            renderCharts();
+            calculateSummaryCards();
+        }
+
+        function calculateSummaryCards() {
+            // Dynamic calculation based on user settings
+            const { income, fixedCost, investment } = appSettings;
+            const totalFlexibleBudget = income - fixedCost - investment;
+
+            // Compute expenses strictly for selected month (excluding user-flagged investments)
+            const monthSpent = expenses
+                .filter(item => item.date && item.date.startsWith(selectedActiveMonth) && !item.isInvestment)
+                .reduce((sum, item) => sum + item.amount, 0);
+
+            const freeMoneyRemaining = totalFlexibleBudget - monthSpent;
+
+            const updateEl = (id, val) => {
+                document.getElementById(id).innerText = val;
+            };
+
+            updateEl('card-income', `₹${income.toLocaleString('en-IN')}`);
+            updateEl('card-fixed', `₹${fixedCost.toLocaleString('en-IN')}`);
+            updateEl('card-sip', `₹${investment.toLocaleString('en-IN')}`);
+            
+            const freeMoneyEl = document.getElementById('card-free');
+            freeMoneyEl.innerText = `₹${freeMoneyRemaining.toLocaleString('en-IN')}`;
+            
+            if (freeMoneyRemaining < 0) {
+                freeMoneyEl.className = "text-3xl font-extrabold text-rose-400 mb-1 tracking-tight";
+                document.getElementById('card-free-subtitle').innerText = `Overspent by ₹${Math.abs(freeMoneyRemaining).toLocaleString('en-IN')}`;
+            } else {
+                freeMoneyEl.className = "text-3xl font-extrabold text-white mb-1 tracking-tight";
+                document.getElementById('card-free-subtitle').innerText = `Remaining flexible budget`;
+            }
+        }
+
+        function getBadgeStyle(text, type = 'category') {
+            if (type === 'payment') {
+                const map = { 
+                    'UPI': 'bg-purple-50 text-purple-700 border-purple-200', 
+                    'Credit Card': 'bg-blue-50 text-blue-700 border-blue-200', 
+                    'Cash': 'bg-emerald-50 text-emerald-700 border-emerald-200', 
+                    'Bank Transfer': 'bg-indigo-50 text-indigo-700 border-indigo-200' 
+                };
+                return map[text] || 'bg-slate-50 text-slate-700 border-slate-200';
+            }
+            
+            const palettes = [
+                'bg-orange-50 text-orange-700 border-orange-200', 
+                'bg-teal-50 text-teal-700 border-teal-200', 
+                'bg-pink-50 text-pink-700 border-pink-200', 
+                'bg-amber-50 text-amber-700 border-amber-200', 
+                'bg-cyan-50 text-cyan-700 border-cyan-200', 
+                'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200',
+                'bg-lime-50 text-lime-700 border-lime-200'
+            ];
+            let hash = 0;
+            for (let i = 0; i < text.length; i++) hash = text.charCodeAt(i) + ((hash << 5) - hash);
+            return palettes[Math.abs(hash) % palettes.length];
+        }
+
+        function renderExpenseTable() {
+            const tbody = document.getElementById('expense-tbody');
+            const searchQuery = document.getElementById('search-input').value.toLowerCase();
+            const categoryFilter = document.getElementById('category-filter').value;
+            const noExpensesEl = document.getElementById('no-expenses');
+
+            const filtered = expenses.filter(item => {
+                const matchesSearch = item.name.toLowerCase().includes(searchQuery) || item.category.toLowerCase().includes(searchQuery);
+                const matchesCategory = categoryFilter === "" || item.category === categoryFilter;
+                const matchesMonth = item.date && item.date.startsWith(selectedActiveMonth);
+                return matchesSearch && matchesCategory && matchesMonth;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = "";
+                noExpensesEl.classList.remove('hidden');
+                return;
+            } else {
+                noExpensesEl.classList.add('hidden');
+            }
+
+            let html = "";
+            filtered.forEach(item => {
+                const d = new Date(item.date);
+                const formattedDate = isNaN(d) ? item.date : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                const catStyle = getBadgeStyle(item.category, 'category');
+                const payStyle = getBadgeStyle(item.payment, 'payment');
+                
+                html += `
+                    <tr class="hover:bg-slate-50/80 transition-colors group">
+                        <td class="py-4 px-6 border-b border-slate-50">
+                            <div class="font-bold text-slate-800">${escapeHtml(item.name)}</div>
+                            <div class="text-[11px] font-semibold text-slate-400 mt-1 uppercase tracking-wider">${formattedDate} • ${isNaN(d) ? '' : getWeekNumber(d)}</div>
+                        </td>
+                        <td class="py-4 px-6 border-b border-slate-50 font-extrabold text-slate-900">₹${item.amount.toLocaleString('en-IN')}</td>
+                        <td class="py-4 px-6 border-b border-slate-50 text-slate-500 font-medium text-sm hidden md:table-cell">${formattedDate}</td>
+                        <td class="py-4 px-6 border-b border-slate-50">
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold border ${catStyle}">
+                                ${escapeHtml(item.category)}
+                            </span>
+                        </td>
+                        <td class="py-4 px-6 border-b border-slate-50">
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider border ${payStyle}">
+                                ${escapeHtml(item.payment)}
+                            </span>
+                        </td>
+                        <td class="py-4 px-6 border-b border-slate-50 text-center">
+                            ${item.isInvestment 
+                                ? '<div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mx-auto border border-blue-100" title="Investment"><i class="fa-solid fa-leaf text-xs"></i></div>' 
+                                : '<span class="text-slate-200">—</span>'}
+                        </td>
+                        <td class="py-4 px-6 border-b border-slate-50 text-right">
+                            <button onclick="deleteExpense('${item.id}')" class="w-9 h-9 rounded-full bg-white text-slate-400 border border-slate-200 hover:text-rose-600 hover:border-rose-200 hover:bg-rose-50 transition-all inline-flex items-center justify-center shadow-sm opacity-100 md:opacity-0 md:group-hover:opacity-100 focus:opacity-100 cursor-pointer" title="Delete">
+                                <i class="fa-solid fa-trash-can text-sm"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+
+        function filterExpenses() {
+            renderExpenseTable();
+        }
+
+        function renderCharts() {
+            Chart.defaults.font.family = "'Inter', sans-serif";
+            Chart.defaults.color = '#64748b';
+
+            const catMap = {};
+            expenses.forEach(item => {
+                if (item.date && item.date.startsWith(selectedActiveMonth) && !item.isInvestment) {
+                    catMap[item.category] = (catMap[item.category] || 0) + item.amount;
+                }
+            });
+
+            const catLabels = Object.keys(catMap);
+            const catValues = Object.values(catMap);
+
+            const ctxCat = document.getElementById('categoryChart').getContext('2d');
+            if (categoryChartInstance) categoryChartInstance.destroy();
+
+            categoryChartInstance = new Chart(ctxCat, {
+                type: 'doughnut',
+                data: {
+                    labels: catLabels.length ? catLabels : ['No Expenses Logged'],
+                    datasets: [{
+                        data: catValues.length ? catValues : [1],
+                        backgroundColor: catValues.length ? [
+                            '#10b981', '#3b82f6', '#f59e0b', '#ec4899', '#8b5cf6', '#14b8a6', '#f43f5e', '#0ea5e9', '#84cc16'
+                        ] : ['#f1f5f9'], 
+                        borderWidth: 3,
+                        borderColor: '#ffffff',
+                        hoverOffset: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: { animateScale: true, animateRotate: true, duration: 1500, easing: 'easeOutCirc' },
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { 
+                                font: { size: 12, weight: 'bold' }, 
+                                color: '#475569', 
+                                usePointStyle: true, 
+                                pointStyle: 'circle', 
+                                padding: 20 
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: '#0f172a',
+                            titleFont: { size: 11, weight: 'bold' },
+                            bodyFont: { size: 14, weight: 'bold' },
+                            padding: 12,
+                            cornerRadius: 12,
+                            callbacks: {
+                                label: function(context) { 
+                                    if(!catValues.length) return ' No data';
+                                    return ' ₹ ' + context.parsed.toLocaleString('en-IN'); 
+                                }
+                            }
+                        }
+                    },
+                    cutout: '75%',
+                    layout: { padding: 10 }
+                }
+            });
+        }
+
+        // Custom Toast Notification
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            if(!container) return;
+            const toast = document.createElement('div');
+            
+            const icon = type === 'success' ? '<i class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>' : '<i class="fa-solid fa-circle-info text-blue-400 text-lg"></i>';
+            const bgClass = 'bg-slate-900 text-white';
+            
+            toast.className = `${bgClass} px-5 py-3.5 rounded-2xl shadow-2xl shadow-slate-900/20 text-sm font-bold flex items-center gap-3 transform translate-y-10 opacity-0 transition-all duration-500 ease-out z-50 border border-slate-700 pointer-events-auto`;
+            toast.innerHTML = `${icon} ${message}`;
+            
+            container.appendChild(toast);
+            
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    toast.classList.remove('translate-y-10', 'opacity-0');
+                });
+            });
+            
+            setTimeout(() => {
+                toast.classList.add('translate-y-10', 'opacity-0');
+                setTimeout(() => toast.remove(), 500);
+            }, 3500);
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        // Initialize App on window load
+        window.onload = initApp;
+    </script>
+</body>
+</html>
