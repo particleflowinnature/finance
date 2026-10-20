@@ -181,7 +181,7 @@
             </div>
         </section>
 
-        <!-- Section 2: Analytics / Doughnut Chart -->
+        <!-- Section 2: Analytics -->
         <section class="grid grid-cols-1 lg:grid-cols-2 gap-5">
             <!-- Doughnut Chart -->
             <div class="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm flex flex-col items-center justify-center relative overflow-hidden min-h-[400px]">
@@ -233,6 +233,28 @@
                     <i id="forecast-icon" class="fa-solid fa-shield mt-0.5"></i>
                     <p id="forecast-status-text" class="text-sm font-semibold">Calculating forecast...</p>
                 </div>
+            </div>
+        </section>
+
+        <!-- Section 2.5: Historical Trends (New in Phase 2.2) -->
+        <section class="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm relative overflow-hidden">
+            <div class="w-full mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">6-Month Cashflow Trend</h2>
+                    <p class="text-sm font-medium text-slate-500 mt-1">Comparing spending and investments against your total income</p>
+                </div>
+                <div class="px-5 py-3 bg-emerald-50 border border-emerald-100 rounded-xl flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                        <i class="fa-solid fa-piggy-bank"></i>
+                    </div>
+                    <div>
+                        <span class="text-[11px] font-bold text-emerald-600 uppercase tracking-wider block mb-0.5">Avg Savings Rate</span>
+                        <div class="text-xl font-extrabold text-emerald-800 leading-none" id="avg-savings-rate">0%</div>
+                    </div>
+                </div>
+            </div>
+            <div class="relative w-full h-[320px]">
+                <canvas id="trendChart"></canvas>
             </div>
         </section>
 
@@ -478,6 +500,7 @@
         let appSettings = { ...defaultSettings };
         let expenses = [];
         let categoryChartInstance = null;
+        let trendChartInstance = null;
         let selectedActiveMonth = "";
         let isEditMode = false;
         let editingExpenseId = null;
@@ -762,6 +785,7 @@
             
             saveSettings();
             calculateSummaryCards();
+            renderTrendChart(); // update the new 6-month trend lines
             closeSettingsModal();
             showToast("Settings updated for your browser.", "success");
         }
@@ -776,6 +800,7 @@
                 renderCategoriesList();
                 populateCategoryDropdowns();
                 calculateSummaryCards();
+                renderTrendChart();
             }
         }
 
@@ -843,6 +868,7 @@
         function renderAll() {
             renderExpenseTable();
             renderCharts();
+            renderTrendChart();
             calculateSummaryCards();
             calculateForecast();
             calculateWealth();
@@ -1090,6 +1116,133 @@
             renderExpenseTable();
         }
 
+        function renderTrendChart() {
+            const months = [];
+            let [yr, mo] = selectedActiveMonth.split('-').map(Number);
+            
+            // Build the last 6 months list counting back from the actively selected month
+            for(let i=5; i>=0; i--) {
+                let d = new Date(yr, mo - 1 - i, 1);
+                let mStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}`;
+                months.push(mStr);
+            }
+
+            const spendData = [];
+            const investData = [];
+            const fixedData = [];
+            const incomeData = [];
+            
+            let totalIncome6Mo = 0;
+            let totalSaved6Mo = 0;
+
+            months.forEach(m => {
+                const mExpenses = expenses.filter(e => e.date && e.date.startsWith(m));
+                const spent = mExpenses.filter(e => !e.isInvestment).reduce((s, e) => s + e.amount, 0);
+                const invested = mExpenses.filter(e => e.isInvestment).reduce((s, e) => s + e.amount, 0);
+                
+                spendData.push(spent);
+                investData.push(invested);
+                fixedData.push(appSettings.fixedCost);
+                incomeData.push(appSettings.income);
+
+                // Calculate savings metrics for the KPI (Income - Spent - Fixed Costs)
+                totalIncome6Mo += appSettings.income;
+                let saved = appSettings.income - spent - appSettings.fixedCost;
+                totalSaved6Mo += saved > 0 ? saved : 0;
+            });
+
+            // Update KPI element
+            const savingsRate = totalIncome6Mo > 0 ? Math.round((totalSaved6Mo / totalIncome6Mo) * 100) : 0;
+            const srEl = document.getElementById('avg-savings-rate');
+            if(srEl) srEl.innerText = `${savingsRate}%`;
+
+            const ctxTrend = document.getElementById('trendChart').getContext('2d');
+            if (trendChartInstance) trendChartInstance.destroy();
+
+            const labels = months.map(m => {
+                const [y, mm] = m.split('-');
+                const d = new Date(y, parseInt(mm)-1, 1);
+                return d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+            });
+
+            trendChartInstance = new Chart(ctxTrend, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Discretionary Spend',
+                            data: spendData,
+                            backgroundColor: '#f43f5e',
+                            borderRadius: 4,
+                            order: 3
+                        },
+                        {
+                            label: 'Fixed Costs',
+                            data: fixedData,
+                            backgroundColor: '#f59e0b',
+                            borderRadius: 4,
+                            order: 2
+                        },
+                        {
+                            label: 'Investments',
+                            data: investData,
+                            backgroundColor: '#3b82f6',
+                            borderRadius: 4,
+                            order: 1
+                        },
+                        {
+                            label: 'Total Monthly Income',
+                            data: incomeData,
+                            type: 'line',
+                            borderColor: '#10b981',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            fill: false,
+                            pointRadius: 4,
+                            pointBackgroundColor: '#fff',
+                            order: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    scales: {
+                        y: { 
+                            beginAtZero: true, 
+                            stacked: true,
+                            grid: { color: '#f1f5f9' },
+                            ticks: { callback: function(value) { return '₹' + value.toLocaleString('en-IN'); } }
+                        },
+                        x: { 
+                            stacked: true,
+                            grid: { display: false }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { font: { size: 11, weight: 'bold' }, usePointStyle: true, pointStyle: 'rectRounded' }
+                        },
+                        tooltip: {
+                            backgroundColor: '#0f172a',
+                            titleFont: { size: 12, weight: 'bold' },
+                            bodyFont: { size: 13, weight: 'bold' },
+                            padding: 12,
+                            cornerRadius: 12,
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ₹' + context.parsed.y.toLocaleString('en-IN');
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
         function renderCharts() {
             Chart.defaults.font.family = "'Inter', sans-serif";
             Chart.defaults.color = '#64748b';
@@ -1277,4 +1430,3 @@
     </script>
 </body>
 </html>
-
