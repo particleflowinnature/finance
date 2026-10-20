@@ -185,7 +185,6 @@
         <section class="grid grid-cols-1 lg:grid-cols-2 gap-5">
             <!-- Doughnut Chart -->
             <div class="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm flex flex-col items-center justify-center relative overflow-hidden min-h-[400px]">
-                <!-- Decorative Glow Effects -->
                 <div class="absolute -right-20 -top-20 w-80 h-80 bg-emerald-400/10 rounded-full blur-3xl pointer-events-none"></div>
                 <div class="absolute -left-20 -bottom-20 w-80 h-80 bg-blue-400/10 rounded-full blur-3xl pointer-events-none"></div>
                 
@@ -214,7 +213,6 @@
                     </div>
                     <div class="w-full bg-slate-100 rounded-full h-4 overflow-hidden relative">
                         <div id="forecast-bar-actual" class="bg-emerald-500 h-4 rounded-full transition-all duration-1000" style="width: 0%"></div>
-                        <!-- Marker for projected -->
                         <div id="forecast-marker" class="absolute top-0 bottom-0 w-1 bg-slate-900 shadow-md z-10 hidden" style="left: 0%"></div>
                     </div>
                 </div>
@@ -438,6 +436,23 @@
                     </div>
                 </div>
 
+                <!-- Data Management Section -->
+                <div class="pt-5 pb-2 border-t border-slate-100">
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-3">Data Management</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button type="button" onclick="exportDataJSON()" class="px-4 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 shadow-sm">
+                            <i class="fa-solid fa-download text-slate-400"></i> Backup (JSON)
+                        </button>
+                        <button type="button" onclick="document.getElementById('import-file').click()" class="px-4 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 shadow-sm">
+                            <i class="fa-solid fa-upload text-slate-400"></i> Restore
+                        </button>
+                        <input type="file" id="import-file" accept=".json" class="hidden" onchange="importDataJSON(event)">
+                        <button type="button" onclick="exportDataCSV()" class="col-span-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 shadow-sm">
+                            <i class="fa-solid fa-file-csv text-slate-400"></i> Export Logs as CSV
+                        </button>
+                    </div>
+                </div>
+
                 <div class="pt-6 flex items-center justify-between border-t border-slate-100">
                     <button type="button" onclick="resetSettingsToDefault()" class="text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors">Reset Defaults</button>
                     <div class="space-x-2">
@@ -464,6 +479,8 @@
         let expenses = [];
         let categoryChartInstance = null;
         let selectedActiveMonth = "";
+        let isEditMode = false;
+        let editingExpenseId = null;
 
         // Initialization
         function initApp() {
@@ -472,7 +489,6 @@
             if (savedSettings) {
                 try { 
                     appSettings = JSON.parse(savedSettings); 
-                    // Fallback for older saves that didn't have categories array
                     if (!appSettings.categories) {
                         appSettings.categories = [...defaultSettings.categories];
                     }
@@ -510,7 +526,6 @@
             const monthSelect = document.getElementById('active-month-select');
             const monthsSet = new Set();
             
-            // Always include current month
             const now = new Date();
             monthsSet.add(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`);
 
@@ -547,14 +562,12 @@
             let filterOptionsHtml = '<option value="">All Categories</option>';
             let expOptionsHtml = '';
             
-            // For filtering logs, include historical categories + current categories
             const allFilterCats = [...new Set([...appSettings.categories, ...expenses.map(e => e.category)])].sort();
             
             allFilterCats.forEach(cat => {
                 filterOptionsHtml += `<option value="${cat}">${cat}</option>`;
             });
 
-            // For adding new expenses, ONLY show current managed categories
             const activeCats = [...appSettings.categories].sort();
             activeCats.forEach(cat => {
                 expOptionsHtml += `<option value="${cat}">${cat}</option>`;
@@ -565,23 +578,17 @@
         }
 
         function calculateStreak() {
-            // Find consecutive days with at least one transaction leading up to today
             if (expenses.length === 0) {
                 document.getElementById('streak-count').innerText = "0";
                 return;
             }
 
-            // Get unique dates sorted descending
             const uniqueDates = [...new Set(expenses.map(e => e.date))].sort().reverse();
-            
             let streak = 0;
-            let currentCheck = new Date(); // Start with today
+            let currentCheck = new Date();
             currentCheck.setHours(0,0,0,0);
 
-            // Create a set of formatted date strings for easy lookup
             const dateSet = new Set(uniqueDates);
-
-            // Check if there's an entry today or yesterday to start the streak
             const todayStr = currentCheck.toISOString().split('T')[0];
             
             let yesterdayCheck = new Date(currentCheck);
@@ -595,17 +602,15 @@
             } else if (dateSet.has(yesterdayStr)) {
                 checkDate = new Date(yesterdayCheck);
             } else {
-                // Streak broken
                 document.getElementById('streak-count').innerText = "0";
                 return;
             }
 
-            // Count backwards
             while(true) {
                 const dateStr = checkDate.toISOString().split('T')[0];
                 if (dateSet.has(dateStr)) {
                     streak++;
-                    checkDate.setDate(checkDate.getDate() - 1); // move back one day
+                    checkDate.setDate(checkDate.getDate() - 1);
                 } else {
                     break;
                 }
@@ -614,12 +619,30 @@
             document.getElementById('streak-count').innerText = streak;
         }
 
-        // Add Transaction Modal UX
-        function openModal() {
-            document.getElementById('exp-date').valueAsDate = new Date();
+        // Add / Edit Transaction Modal UX
+        function openModal(isEdit = false) {
             const modal = document.getElementById('expense-modal');
+            const title = modal.querySelector('h3');
+            const subtitle = modal.querySelector('h3 + p');
+            const submitBtn = modal.querySelector('button[type="submit"]');
+
+            if (!isEdit) {
+                isEditMode = false;
+                editingExpenseId = null;
+                document.getElementById('expense-form').reset();
+                document.getElementById('exp-date').valueAsDate = new Date();
+                document.querySelector('input[name="payment-method"][value="UPI"]').checked = true;
+                
+                title.innerText = "Add Transaction";
+                subtitle.innerText = "Log a new expense or investment";
+                submitBtn.innerHTML = `Save Transaction <i class="fa-solid fa-arrow-right text-xs ml-1"></i>`;
+            } else {
+                title.innerText = "Edit Transaction";
+                subtitle.innerText = "Update the details of your log";
+                submitBtn.innerHTML = `Update Transaction <i class="fa-solid fa-check text-xs ml-1"></i>`;
+            }
+
             modal.classList.remove('hidden');
-            
             requestAnimationFrame(() => {
                 modal.style.opacity = '1';
                 document.getElementById('expense-modal-content').classList.remove('scale-95');
@@ -636,8 +659,28 @@
             setTimeout(() => {
                 modal.classList.add('hidden');
                 document.getElementById('expense-form').reset();
-                document.querySelector('input[name="payment-method"][value="UPI"]').checked = true;
+                isEditMode = false;
+                editingExpenseId = null;
             }, 300);
+        }
+
+        function editExpense(id) {
+            const expense = expenses.find(e => e.id === id);
+            if (!expense) return;
+
+            isEditMode = true;
+            editingExpenseId = id;
+
+            document.getElementById('exp-name').value = expense.name;
+            document.getElementById('exp-amount').value = expense.amount;
+            document.getElementById('exp-date').value = expense.date;
+            document.getElementById('exp-category').value = expense.category;
+            document.getElementById('exp-investment').checked = expense.isInvestment;
+            
+            const paymentRadio = document.querySelector(`input[name="payment-method"][value="${expense.payment}"]`);
+            if (paymentRadio) paymentRadio.checked = true;
+
+            openModal(true);
         }
 
         function handleFormSubmit(event) {
@@ -650,17 +693,21 @@
             const payment = paymentRadio ? paymentRadio.value : 'UPI';
             const isInvestment = document.getElementById('exp-investment').checked;
 
-            const newExpense = {
-                id: Date.now().toString(),
-                name,
-                amount,
-                date,
-                category,
-                payment,
-                isInvestment
-            };
+            if (isEditMode && editingExpenseId) {
+                const index = expenses.findIndex(e => e.id === editingExpenseId);
+                if (index !== -1) {
+                    expenses[index] = { ...expenses[index], name, amount, date, category, payment, isInvestment };
+                    showToast("Transaction updated successfully!", "success");
+                }
+            } else {
+                const newExpense = {
+                    id: Date.now().toString(),
+                    name, amount, date, category, payment, isInvestment
+                };
+                expenses.unshift(newExpense);
+                showToast("Transaction logged successfully!", "success");
+            }
 
-            expenses.unshift(newExpense);
             saveExpenses();
             
             if (!document.querySelector(`#active-month-select option[value="${date.substring(0,7)}"]`)) {
@@ -676,12 +723,10 @@
             calculateStreak();
             renderAll();
             closeModal();
-            showToast("Transaction logged successfully!", "success");
         }
 
         // Settings Modal UX
         function openSettingsModal() {
-            // Populate current values
             document.getElementById('set-income').value = appSettings.income;
             document.getElementById('set-fixed').value = appSettings.fixedCost;
             document.getElementById('set-invest').value = appSettings.investment;
@@ -716,7 +761,7 @@
             appSettings.investment = parseFloat(document.getElementById('set-invest').value) || 0;
             
             saveSettings();
-            calculateSummaryCards(); // Instantly update view
+            calculateSummaryCards();
             closeSettingsModal();
             showToast("Settings updated for your browser.", "success");
         }
@@ -773,7 +818,7 @@
             saveSettings();
             renderCategoriesList();
             populateCategoryDropdowns();
-            filterExpenses(); // Refresh table in case filtered by this category
+            filterExpenses();
             showToast("Category removed", "info");
         }
 
@@ -804,7 +849,6 @@
         }
 
         function calculateWealth() {
-            // Sum up every transaction marked as an investment, regardless of the selected month
             const totalWealth = expenses
                 .filter(item => item.isInvestment)
                 .reduce((sum, item) => sum + item.amount, 0);
@@ -862,7 +906,6 @@
 
             probExceed = Math.round(Math.min(100, Math.max(0, probExceed)));
 
-            // Update DOM Elements
             document.getElementById('forecast-actual').innerText = `₹${monthSpent.toLocaleString('en-IN')} / ₹${totalBudget.toLocaleString('en-IN')}`;
             
             const actualPct = totalBudget > 0 ? Math.min(100, (monthSpent / totalBudget) * 100) : (monthSpent > 0 ? 100 : 0);
@@ -922,11 +965,9 @@
         }
 
         function calculateSummaryCards() {
-            // Dynamic calculation based on user settings
             const { income, fixedCost, investment } = appSettings;
             const totalFlexibleBudget = income - fixedCost - investment;
 
-            // Compute expenses strictly for selected month (excluding user-flagged investments)
             const monthSpent = expenses
                 .filter(item => item.date && item.date.startsWith(selectedActiveMonth) && !item.isInvestment)
                 .reduce((sum, item) => sum + item.amount, 0);
@@ -1030,9 +1071,14 @@
                                 : '<span class="text-slate-200">—</span>'}
                         </td>
                         <td class="py-4 px-6 border-b border-slate-50 text-right">
-                            <button onclick="deleteExpense('${item.id}')" class="w-9 h-9 rounded-full bg-white text-slate-400 border border-slate-200 hover:text-rose-600 hover:border-rose-200 hover:bg-rose-50 transition-all inline-flex items-center justify-center shadow-sm opacity-100 md:opacity-0 md:group-hover:opacity-100 focus:opacity-100 cursor-pointer" title="Delete">
-                                <i class="fa-solid fa-trash-can text-sm"></i>
-                            </button>
+                            <div class="flex items-center justify-end gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+                                <button onclick="editExpense('${item.id}')" class="w-8 h-8 rounded-full bg-white text-blue-500 border border-blue-100 hover:bg-blue-50 hover:border-blue-200 transition-all inline-flex items-center justify-center shadow-sm cursor-pointer" title="Edit">
+                                    <i class="fa-solid fa-pen text-[11px]"></i>
+                                </button>
+                                <button onclick="deleteExpense('${item.id}')" class="w-8 h-8 rounded-full bg-white text-slate-400 border border-slate-200 hover:text-rose-600 hover:border-rose-200 hover:bg-rose-50 transition-all inline-flex items-center justify-center shadow-sm cursor-pointer" title="Delete">
+                                    <i class="fa-solid fa-trash-can text-[11px]"></i>
+                                </button>
+                            </div>
                         </td>
                     </tr>
                 `;
@@ -1110,6 +1156,92 @@
             });
         }
 
+        // --- Data Management Utilities ---
+
+        function exportDataJSON() {
+            if (expenses.length === 0) return showToast("No data to backup yet.", "info");
+            
+            const payload = {
+                version: "1.0",
+                exportDate: new Date().toISOString(),
+                settings: appSettings,
+                expenses: expenses
+            };
+
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(payload, null, 2));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", `Finance_Backup_${new Date().toISOString().split('T')[0]}.json`);
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+            
+            showToast("Backup downloaded successfully.", "success");
+        }
+
+        function importDataJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    
+                    if (importedData.expenses && Array.isArray(importedData.expenses) && importedData.settings) {
+                        appSettings = importedData.settings;
+                        expenses = importedData.expenses;
+                        
+                        saveSettings();
+                        saveExpenses();
+                        
+                        initApp(); 
+                        closeSettingsModal();
+                        showToast("Data restored successfully!", "success");
+                    } else {
+                        showToast("Invalid backup file structure.", "error");
+                    }
+                } catch (error) {
+                    showToast("Failed to parse the backup file.", "error");
+                }
+                event.target.value = ''; 
+            };
+            reader.readAsText(file);
+        }
+
+        function exportDataCSV() {
+            if (expenses.length === 0) return showToast("No transactions to export.", "info");
+            
+            let csvContent = "ID,Name,Amount,Date,Category,Payment Method,Investment\n";
+            
+            expenses.forEach(row => {
+                const cleanName = `"${row.name.replace(/"/g, '""')}"`;
+                const rowArray = [
+                    row.id,
+                    cleanName,
+                    row.amount,
+                    row.date,
+                    row.category,
+                    row.payment,
+                    row.isInvestment ? "Yes" : "No"
+                ];
+                csvContent += rowArray.join(",") + "\n";
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute("href", url);
+            link.setAttribute("download", `Finance_Export_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showToast("CSV exported successfully.", "success");
+        }
+
         // Custom Toast Notification
         function showToast(message, type = 'success') {
             const container = document.getElementById('toast-container');
@@ -1145,3 +1277,4 @@
     </script>
 </body>
 </html>
+
