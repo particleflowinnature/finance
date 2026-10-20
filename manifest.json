@@ -1,0 +1,16 @@
+{
+  "name": "Finance Tracker Dashboard",
+  "short_name": "Finance",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#10b981",
+  "description": "A private, local-first finance tracking dashboard.",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
