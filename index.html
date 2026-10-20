@@ -7,9 +7,9 @@
     <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#10b981">
     <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com/3.4.17"></script>
     <!-- Chart.js CDN for interactive charts -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
     <!-- FontAwesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts Inter -->
@@ -55,11 +55,11 @@
                         Finance Dashboard 
                         <span class="hidden sm:inline-block text-[10px] px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 font-bold uppercase tracking-wider">Private</span>
                     </h1>
-                    <p class="text-xs font-medium text-slate-500 hidden sm:block">Data saved securely to your device</p>
+                    <p class="text-xs font-medium text-slate-500 hidden sm:block">Stored only in this browser (unencrypted). Back up regularly</p>
                 </div>
             </div>
             <div class="flex items-center space-x-3">
-                <button onclick="openSettingsModal()" class="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all cursor-pointer" title="Financial Settings">
+                <button onclick="openSettingsModal()" class="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all cursor-pointer" title="Financial Settings" aria-label="Financial settings">
                     <i class="fa-solid fa-gear text-lg"></i>
                 </button>
                 <button onclick="openModal()" class="hidden md:flex bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-emerald-600/20 transition-all items-center gap-2 cursor-pointer active:scale-95">
@@ -70,7 +70,7 @@
     </header>
 
     <!-- Floating Action Button for Mobile -->
-    <button onclick="openModal()" class="fixed bottom-6 right-6 z-40 md:hidden w-14 h-14 bg-emerald-600 text-white rounded-full shadow-xl shadow-emerald-600/40 flex items-center justify-center text-xl hover:bg-emerald-700 transition-transform active:scale-90">
+    <button aria-label="Add transaction" onclick="openModal()" class="fixed bottom-6 right-6 z-40 md:hidden w-14 h-14 bg-emerald-600 text-white rounded-full shadow-xl shadow-emerald-600/40 flex items-center justify-center text-xl hover:bg-emerald-700 transition-transform active:scale-90">
         <i class="fa-solid fa-plus"></i>
     </button>
 
@@ -108,7 +108,7 @@
                         <i class="fa-solid fa-vault text-2xl sm:text-3xl"></i>
                     </div>
                     <div>
-                        <h2 class="text-xs sm:text-sm font-bold text-blue-300 uppercase tracking-widest mb-1">Total Accumulated Wealth</h2>
+                        <h2 class="text-xs sm:text-sm font-bold text-blue-300 uppercase tracking-widest mb-1">Total Invested (Contributions)</h2>
                         <div class="text-3xl sm:text-4xl font-extrabold tracking-tight" id="all-time-wealth">₹0</div>
                     </div>
                 </div>
@@ -231,7 +231,7 @@
                         <div id="forecast-projected" class="text-xl font-extrabold text-slate-900">₹0</div>
                     </div>
                     <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
-                        <div class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1">Exceed Prob.</div>
+                        <div class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1">Risk Score</div>
                         <div id="forecast-probability" class="text-xl font-extrabold text-slate-900">0%</div>
                     </div>
                 </div>
@@ -298,7 +298,7 @@
                         <tr class="text-[11px] font-bold text-slate-400 uppercase tracking-widest bg-white border-b border-slate-100">
                             <th class="py-4 px-6">Name</th>
                             <th class="py-4 px-6">Amount</th>
-                            <th class="py-4 px-6">Date</th>
+                            <th class="py-4 px-6 hidden md:table-cell">Date</th>
                             <th class="py-4 px-6">Category</th>
                             <th class="py-4 px-6 text-center">Type</th>
                             <th class="py-4 px-6 text-right">Action</th>
@@ -336,7 +336,7 @@
                     <h3 class="text-2xl font-extrabold text-slate-900 tracking-tight">Add Transaction</h3>
                     <p class="text-sm font-medium text-slate-500 mt-1">Log a new expense or investment</p>
                 </div>
-                <button onclick="closeModal()" class="w-10 h-10 rounded-full bg-slate-100 text-slate-500 hover:bg-rose-50 hover:text-rose-600 flex items-center justify-center transition-colors cursor-pointer">
+                <button aria-label="Close" onclick="closeModal()" class="w-10 h-10 rounded-full bg-slate-100 text-slate-500 hover:bg-rose-50 hover:text-rose-600 flex items-center justify-center transition-colors cursor-pointer">
                     <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
@@ -431,7 +431,7 @@
                     <h3 class="text-2xl font-extrabold text-slate-900 tracking-tight">Financial Settings</h3>
                     <p class="text-sm font-medium text-slate-500 mt-1">Set your personal monthly baseline</p>
                 </div>
-                <button onclick="closeSettingsModal()" class="w-10 h-10 rounded-full bg-slate-100 text-slate-500 hover:bg-rose-50 hover:text-rose-600 flex items-center justify-center transition-colors cursor-pointer">
+                <button aria-label="Close" onclick="closeSettingsModal()" class="w-10 h-10 rounded-full bg-slate-100 text-slate-500 hover:bg-rose-50 hover:text-rose-600 flex items-center justify-center transition-colors cursor-pointer">
                     <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
@@ -506,8 +506,59 @@
             categories: ['Housing', 'Groceries', 'Transport', 'Utilities', 'Entertainment', 'Personal', 'Other']
         };
 
+        function localISO(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+        function freshSettings() { return { ...defaultSettings, categories: [...defaultSettings.categories] }; }
+        function newId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+        function loadSkips() { try { return JSON.parse(localStorage.getItem('finance_tracker_skips') || '[]'); } catch (e) { return []; } }
+        function addSkip(k) { const a = loadSkips(); if (!a.includes(k)) { a.push(k); localStorage.setItem('finance_tracker_skips', JSON.stringify(a)); } }
+        function removeSkip(k) { localStorage.setItem('finance_tracker_skips', JSON.stringify(loadSkips().filter(x => x !== k))); }
+        function sanitizeImport(d) {
+            if (!d || !Array.isArray(d.expenses) || !d.settings) return null;
+            const num = v => Number.isFinite(parseFloat(v)) ? parseFloat(v) : 0;
+            const ex = [];
+            for (const e of d.expenses) {
+                if (!e || typeof e.name !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(e.date || '') || !Number.isFinite(Number(e.amount))) return null;
+                ex.push({ id: String(e.id || newId()), name: e.name.slice(0, 100), amount: Number(e.amount), date: e.date, category: String(e.category || 'Other').slice(0, 50), payment: String(e.payment || 'UPI'), isInvestment: !!e.isInvestment, isFixed: !!e.isFixed, isRecurring: !!e.isRecurring });
+            }
+            const cats = Array.isArray(d.settings.categories) ? d.settings.categories.filter(c => typeof c === 'string' && c.trim()).map(c => c.slice(0, 50)) : [];
+            return { expenses: ex, settings: { income: num(d.settings.income), fixedCost: num(d.settings.fixedCost), investment: num(d.settings.investment), categories: cats.length ? cats : [...defaultSettings.categories] } };
+        }
+        function afterDataChange() { saveExpenses(); populateMonthDropdown(); populateCategoryDropdowns(); calculateStreak(); renderAll(); }
+        function showUndoToast(msg, undo) {
+            const c = document.getElementById('toast-container'); const t = document.createElement('div');
+            t.className = 'bg-slate-900 text-white px-5 py-3.5 rounded-2xl shadow-2xl text-sm font-bold flex items-center gap-4 border border-slate-700 pointer-events-auto';
+            const sp = document.createElement('span'); sp.textContent = msg;
+            const b = document.createElement('button'); b.textContent = 'Undo'; b.className = 'text-emerald-400 hover:text-emerald-300 underline';
+            b.onclick = () => { undo(); t.remove(); };
+            t.append(sp, b); c.appendChild(t); setTimeout(() => t.remove(), 6000);
+        }
+        function postInit() {
+            if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+            document.querySelectorAll('label.block').forEach(l => {
+                const c = l.nextElementSibling; const f = c && (c.matches('input,select') ? c : c.querySelector('input,select'));
+                if (f && f.id) l.htmlFor = f.id;
+            });
+            ['expense-modal-content', 'settings-modal-content'].forEach(id => { const m = document.getElementById(id); m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true'); });
+            const last = parseInt(localStorage.getItem('finance_tracker_lastbackup') || '0');
+            if (expenses.length > 0 && Date.now() - last > 14 * 86400000) {
+                setTimeout(() => showToast(last ? 'Last backup was over 2 weeks ago. Export one from Settings.' : 'No backup yet. Export one from Settings.', 'info'), 2500);
+            }
+        }
+        document.addEventListener('keydown', e => {
+            const open = ['expense-modal', 'settings-modal'].map(id => document.getElementById(id)).find(m => !m.classList.contains('hidden'));
+            if (!open) return;
+            if (e.key === 'Escape') { open.id === 'expense-modal' ? closeModal() : closeSettingsModal(); return; }
+            if (e.key === 'Tab') {
+                const f = [...open.querySelectorAll('button,input,select')].filter(x => !x.disabled && x.type !== 'file');
+                if (!f.length) return;
+                const first = f[0], lastEl = f[f.length - 1];
+                if (e.shiftKey && document.activeElement === first) { e.preventDefault(); lastEl.focus(); }
+                else if (!e.shiftKey && document.activeElement === lastEl) { e.preventDefault(); first.focus(); }
+            }
+        });
+
         // Global State Variables
-        let appSettings = { ...defaultSettings };
+        let appSettings = freshSettings();
         let expenses = [];
         let categoryChartInstance = null;
         let trendChartInstance = null;
@@ -526,9 +577,9 @@
                     if (!appSettings.categories) {
                         appSettings.categories = [...defaultSettings.categories];
                     }
-                } catch(e) { appSettings = { ...defaultSettings }; }
+                } catch(e) { appSettings = freshSettings(); }
             } else {
-                appSettings = { ...defaultSettings };
+                appSettings = freshSettings();
                 localStorage.setItem('finance_tracker_settings', JSON.stringify(appSettings));
             }
 
@@ -561,50 +612,33 @@
 
         // --- NEW: Recurring Transactions Auto-Generator ---
         function processRecurringTransactions() {
-            const now = new Date();
-            const currentMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-            
-            // Find the latest template for each recurring expense
-            const recurringTemplates = new Map();
+            const todayISO = localISO(new Date());
+            const cur = todayISO.substring(0, 7);
+            const skips = loadSkips();
+            const tpl = new Map();
             expenses.filter(e => e.isRecurring).forEach(e => {
-                const signature = `${e.name}_${e.category}`; // Unique signature
-                if (!recurringTemplates.has(signature)) {
-                    recurringTemplates.set(signature, e);
-                } else {
-                    const existingDate = new Date(recurringTemplates.get(signature).date);
-                    const newDate = new Date(e.date);
-                    if (newDate > existingDate) {
-                        recurringTemplates.set(signature, e);
-                    }
+                const k = e.name + '_' + e.category;
+                if (!tpl.has(k) || e.date > tpl.get(k).date) tpl.set(k, e);
+            });
+            let added = 0;
+            tpl.forEach((t, k) => {
+                const day = parseInt(t.date.substring(8, 10)) || 1;
+                let [y, m] = t.date.substring(0, 7).split('-').map(Number);
+                while (true) {
+                    m++; if (m > 12) { m = 1; y++; }
+                    const ym = y + '-' + String(m).padStart(2, '0');
+                    if (ym > cur) break;
+                    const ds = ym + '-' + String(Math.min(day, new Date(y, m, 0).getDate())).padStart(2, '0');
+                    if (ds > todayISO) break;
+                    if (skips.includes(k + '|' + ym)) continue;
+                    if (expenses.some(e => e.date.startsWith(ym) && e.name === t.name && e.category === t.category && e.isRecurring)) continue;
+                    expenses.unshift({ ...t, id: newId(), date: ds });
+                    added++;
                 }
             });
-
-            let addedNew = false;
-            recurringTemplates.forEach((template, signature) => {
-                const templateMonth = template.date.substring(0, 7);
-                // If template is from a past month, check if it was already created this month
-                if (templateMonth < currentMonthStr) {
-                    const alreadyExistsThisMonth = expenses.some(e => 
-                        e.date.startsWith(currentMonthStr) && 
-                        e.name === template.name && 
-                        e.category === template.category &&
-                        e.isRecurring === true
-                    );
-                    
-                    if (!alreadyExistsThisMonth) {
-                        expenses.unshift({
-                            ...template,
-                            id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
-                            date: now.toISOString().split('T')[0] // Set to today
-                        });
-                        addedNew = true;
-                    }
-                }
-            });
-
-            if (addedNew) {
+            if (added) {
                 saveExpenses();
-                setTimeout(() => showToast("Recurring monthly bills auto-logged for this month.", "info"), 1000);
+                setTimeout(() => showToast(added + ' recurring bill(s) auto-logged.', 'info'), 1000);
             }
         }
 
@@ -651,12 +685,12 @@
             const allFilterCats = [...new Set([...appSettings.categories, ...expenses.map(e => e.category)])].sort();
             
             allFilterCats.forEach(cat => {
-                filterOptionsHtml += `<option value="${cat}">${cat}</option>`;
+                filterOptionsHtml += `<option value="${escapeHtml(cat)}">${escapeHtml(cat)}</option>`;
             });
 
             const activeCats = [...appSettings.categories].sort();
             activeCats.forEach(cat => {
-                expOptionsHtml += `<option value="${cat}">${cat}</option>`;
+                expOptionsHtml += `<option value="${escapeHtml(cat)}">${escapeHtml(cat)}</option>`;
             });
 
             filterCatSelect.innerHTML = filterOptionsHtml;
@@ -675,11 +709,11 @@
             currentCheck.setHours(0,0,0,0);
 
             const dateSet = new Set(uniqueDates);
-            const todayStr = currentCheck.toISOString().split('T')[0];
+            const todayStr = localISO(currentCheck);
             
             let yesterdayCheck = new Date(currentCheck);
             yesterdayCheck.setDate(yesterdayCheck.getDate() - 1);
-            const yesterdayStr = yesterdayCheck.toISOString().split('T')[0];
+            const yesterdayStr = localISO(yesterdayCheck);
 
             let checkDate = new Date();
             
@@ -693,7 +727,7 @@
             }
 
             while(true) {
-                const dateStr = checkDate.toISOString().split('T')[0];
+                const dateStr = localISO(checkDate);
                 if (dateSet.has(dateStr)) {
                     streak++;
                     checkDate.setDate(checkDate.getDate() - 1);
@@ -716,7 +750,7 @@
                 isEditMode = false;
                 editingExpenseId = null;
                 document.getElementById('expense-form').reset();
-                document.getElementById('exp-date').valueAsDate = new Date();
+                document.getElementById('exp-date').value = localISO(new Date());
                 document.querySelector('input[name="payment-method"][value="UPI"]').checked = true;
                 
                 title.innerText = "Add Transaction";
@@ -786,7 +820,9 @@
             if (isEditMode && editingExpenseId) {
                 const index = expenses.findIndex(e => e.id === editingExpenseId);
                 if (index !== -1) {
-                    expenses[index] = { ...expenses[index], name, amount, date, category, payment, isInvestment, isFixed, isRecurring };
+                    const old = expenses[index];
+                    if (old.isRecurring && !isRecurring) expenses.forEach(e => { if (e.name === old.name && e.category === old.category) e.isRecurring = false; });
+                    expenses[index] = { ...old, name, amount, date, category, payment, isInvestment, isFixed, isRecurring };
                     showToast("Transaction updated successfully!", "success");
                 }
             } else {
@@ -859,7 +895,7 @@
 
         function resetSettingsToDefault() {
             if (confirm("Reset to default baselines and categories?")) {
-                appSettings = { ...defaultSettings };
+                appSettings = freshSettings();
                 document.getElementById('set-income').value = appSettings.income;
                 document.getElementById('set-fixed').value = appSettings.fixedCost;
                 document.getElementById('set-invest').value = appSettings.investment;
@@ -878,7 +914,7 @@
                 listEl.innerHTML += `
                     <div class="flex items-center justify-between bg-slate-50 border border-slate-100 px-3 py-2 rounded-lg">
                         <span class="text-sm font-semibold text-slate-700">${escapeHtml(cat)}</span>
-                        <button type="button" onclick="deleteCustomCategory('${escapeHtml(cat)}')" class="text-slate-400 hover:text-rose-500 transition-colors cursor-pointer p-1" title="Delete Category">
+                        <button type="button" data-cat="${escapeHtml(cat)}" onclick="deleteCustomCategory(this.dataset.cat)" class="text-slate-400 hover:text-rose-500 transition-colors cursor-pointer p-1" title="Delete Category" aria-label="Delete category">
                             <i class="fa-solid fa-trash-can text-xs pointer-events-none"></i>
                         </button>
                     </div>
@@ -915,13 +951,17 @@
         }
 
         function deleteExpense(id) {
-            expenses = expenses.filter(item => item.id !== id);
-            saveExpenses();
-            populateMonthDropdown();
-            populateCategoryDropdowns();
-            calculateStreak();
-            renderAll();
-            showToast("Transaction deleted.", "info");
+            const idx = expenses.findIndex(e => e.id === id);
+            if (idx < 0) return;
+            const removed = expenses.splice(idx, 1)[0];
+            const skipKey = removed.name + '_' + removed.category + '|' + removed.date.substring(0, 7);
+            if (removed.isRecurring) addSkip(skipKey);
+            afterDataChange();
+            showUndoToast('Transaction deleted.', () => {
+                expenses.splice(Math.min(idx, expenses.length), 0, removed);
+                if (removed.isRecurring) removeSkip(skipKey);
+                afterDataChange();
+            });
         }
 
         function getWeekNumber(d) {
@@ -978,8 +1018,10 @@
 
             if (!isHistorical) {
                 const daysPassed = now.getDate();
-                const dailyRunRate = monthDiscSpent / daysPassed;
-                projectedSpend = dailyRunRate * daysInMonth;
+                const w = Math.min(1, daysPassed / 7);
+                const priorDaily = Math.max(0, totalFlexibleBudget) / daysInMonth;
+                const blended = w * (monthDiscSpent / daysPassed) + (1 - w) * priorDaily;
+                projectedSpend = monthDiscSpent + blended * (daysInMonth - daysPassed);
 
                 if (totalFlexibleBudget > 0) {
                     const ratio = projectedSpend / totalFlexibleBudget;
@@ -1136,6 +1178,7 @@
             }
 
             let html = "";
+            filtered.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
             filtered.forEach(item => {
                 const d = new Date(item.date);
                 const formattedDate = isNaN(d) ? item.date : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -1168,10 +1211,10 @@
                         </td>
                         <td class="py-4 px-6 border-b border-slate-50 text-right">
                             <div class="flex items-center justify-end gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
-                                <button onclick="editExpense('${item.id}')" class="w-8 h-8 rounded-full bg-white text-blue-500 border border-blue-100 hover:bg-blue-50 hover:border-blue-200 transition-all inline-flex items-center justify-center shadow-sm cursor-pointer" title="Edit">
+                                <button data-id="${escapeHtml(String(item.id))}" onclick="editExpense(this.dataset.id)" class="w-8 h-8 rounded-full bg-white text-blue-500 border border-blue-100 hover:bg-blue-50 hover:border-blue-200 transition-all inline-flex items-center justify-center shadow-sm cursor-pointer" title="Edit" aria-label="Edit transaction">
                                     <i class="fa-solid fa-pen text-[11px]"></i>
                                 </button>
-                                <button onclick="deleteExpense('${item.id}')" class="w-8 h-8 rounded-full bg-white text-slate-400 border border-slate-200 hover:text-rose-600 hover:border-rose-200 hover:bg-rose-50 transition-all inline-flex items-center justify-center shadow-sm cursor-pointer" title="Delete">
+                                <button data-id="${escapeHtml(String(item.id))}" onclick="deleteExpense(this.dataset.id)" class="w-8 h-8 rounded-full bg-white text-slate-400 border border-slate-200 hover:text-rose-600 hover:border-rose-200 hover:bg-rose-50 transition-all inline-flex items-center justify-center shadow-sm cursor-pointer" title="Delete" aria-label="Delete transaction">
                                     <i class="fa-solid fa-trash-can text-[11px]"></i>
                                 </button>
                             </div>
@@ -1219,9 +1262,11 @@
                 fixedData.push(finalFixed);
                 incomeData.push(appSettings.income);
 
-                totalIncome6Mo += appSettings.income;
-                let saved = appSettings.income - spent - finalFixed;
-                totalSaved6Mo += saved > 0 ? saved : 0;
+                if (mExpenses.length > 0) {
+                    totalIncome6Mo += appSettings.income;
+                    const saved = appSettings.income - spent - finalFixed;
+                    totalSaved6Mo += saved > 0 ? saved : 0;
+                }
             });
 
             const savingsRate = totalIncome6Mo > 0 ? Math.round((totalSaved6Mo / totalIncome6Mo) * 100) : 0;
@@ -1424,6 +1469,7 @@
             downloadAnchorNode.click();
             downloadAnchorNode.remove();
             
+            localStorage.setItem('finance_tracker_lastbackup', Date.now());
             showToast("Backup downloaded successfully.", "success");
         }
 
@@ -1436,9 +1482,11 @@
                 try {
                     const importedData = JSON.parse(e.target.result);
                     
-                    if (importedData.expenses && Array.isArray(importedData.expenses) && importedData.settings) {
-                        appSettings = importedData.settings;
-                        expenses = importedData.expenses;
+                    const clean = sanitizeImport(importedData);
+                    if (clean && !confirm('Restore will replace ALL current data in this browser. Continue?')) { event.target.value = ''; return; }
+                    if (clean) {
+                        appSettings = clean.settings;
+                        expenses = clean.expenses;
                         
                         saveSettings();
                         saveExpenses();
@@ -1518,10 +1566,10 @@
         }
 
         function escapeHtml(str) {
-            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+            return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
 
-        window.onload = initApp;
+        window.onload = () => { initApp(); postInit(); };
     </script>
     <script>
   if ('serviceWorker' in navigator) {
