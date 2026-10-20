@@ -145,8 +145,9 @@
                             <i class="fa-solid fa-lock text-xs"></i>
                         </div>
                     </div>
-                    <div class="text-3xl font-extrabold text-slate-900 mb-1 tracking-tight" id="card-fixed">₹0</div>
-                    <p class="text-xs font-semibold text-slate-400">Needs every month</p>
+                    <!-- Updated to show Actual / Baseline -->
+                    <div class="text-2xl sm:text-3xl font-extrabold text-slate-900 mb-1 tracking-tight" id="card-fixed">₹0 / ₹0</div>
+                    <p class="text-xs font-semibold text-slate-400">Actual logged vs Target</p>
                 </div>
             </div>
 
@@ -188,9 +189,13 @@
                 <div class="absolute -right-20 -top-20 w-80 h-80 bg-emerald-400/10 rounded-full blur-3xl pointer-events-none"></div>
                 <div class="absolute -left-20 -bottom-20 w-80 h-80 bg-blue-400/10 rounded-full blur-3xl pointer-events-none"></div>
                 
-                <div class="w-full text-center mb-6 relative z-10">
+                <div class="w-full text-center mb-4 relative z-10 flex flex-col items-center">
                     <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Monthly Breakdown</h2>
-                    <p class="text-sm font-medium text-slate-500 mt-1">A visual summary of where your money went</p>
+                    <!-- Toggle Buttons for Discretionary vs Fixed -->
+                    <div class="flex justify-center gap-2 mt-3 bg-slate-100 p-1 rounded-lg border border-slate-200">
+                        <button onclick="setChartView('discretionary')" id="btn-view-disc" class="px-4 py-1.5 rounded-md text-xs font-bold bg-slate-800 text-white shadow-sm transition-all cursor-pointer">Discretionary</button>
+                        <button onclick="setChartView('fixed')" id="btn-view-fixed" class="px-4 py-1.5 rounded-md text-xs font-bold text-slate-600 hover:bg-slate-200 transition-all cursor-pointer">Fixed Costs</button>
+                    </div>
                 </div>
                 
                 <div class="relative w-full max-w-md flex-1 flex items-center justify-center z-10">
@@ -236,7 +241,7 @@
             </div>
         </section>
 
-        <!-- Section 2.5: Historical Trends (New in Phase 2.2) -->
+        <!-- Section 2.5: Historical Trends -->
         <section class="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm relative overflow-hidden">
             <div class="w-full mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
@@ -293,8 +298,7 @@
                             <th class="py-4 px-6">Amount</th>
                             <th class="py-4 px-6">Date</th>
                             <th class="py-4 px-6">Category</th>
-                            <th class="py-4 px-6">Payment</th>
-                            <th class="py-4 px-6 text-center">Inv.</th>
+                            <th class="py-4 px-6 text-center">Type</th>
                             <th class="py-4 px-6 text-right">Action</th>
                         </tr>
                     </thead>
@@ -322,10 +326,10 @@
 
     <!-- Log Expense Modal -->
     <div id="expense-modal" class="fixed inset-0 z-[60] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden transition-opacity duration-300 opacity-0">
-        <div class="bg-white rounded-[2rem] max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-100 transform scale-95 transition-transform duration-300 relative overflow-y-auto max-h-[85vh] custom-scrollbar" id="expense-modal-content">
+        <div class="bg-white rounded-[2rem] max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-slate-100 transform scale-95 transition-transform duration-300 relative overflow-y-auto max-h-[90vh] custom-scrollbar" id="expense-modal-content">
             <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-400 to-teal-500"></div>
             
-            <div class="flex items-center justify-between mb-8 mt-2">
+            <div class="flex items-center justify-between mb-6 mt-2">
                 <div>
                     <h3 class="text-2xl font-extrabold text-slate-900 tracking-tight">Add Transaction</h3>
                     <p class="text-sm font-medium text-slate-500 mt-1">Log a new expense or investment</p>
@@ -335,8 +339,8 @@
                 </button>
             </div>
 
-            <form id="expense-form" onsubmit="handleFormSubmit(event)" class="space-y-6">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <form id="expense-form" onsubmit="handleFormSubmit(event)" class="space-y-5">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Expense Name</label>
                         <input type="text" id="exp-name" required placeholder="e.g. Swiggy Lunch" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all shadow-sm">
@@ -347,7 +351,7 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Date</label>
                         <input type="date" id="exp-date" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all shadow-sm cursor-pointer">
@@ -365,39 +369,43 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 gap-5">
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Payment Method</label>
-                        <div class="flex flex-wrap gap-2" id="payment-chips">
-                            <label class="cursor-pointer">
-                                <input type="radio" name="payment-method" value="UPI" class="peer sr-only" checked>
-                                <div class="px-4 py-2 rounded-lg border border-slate-200 bg-slate-50 text-sm font-semibold text-slate-600 peer-checked:bg-emerald-50 peer-checked:border-emerald-500 peer-checked:text-emerald-700 transition-all hover:bg-slate-100">UPI</div>
-                            </label>
-                            <label class="cursor-pointer">
-                                <input type="radio" name="payment-method" value="Credit Card" class="peer sr-only">
-                                <div class="px-4 py-2 rounded-lg border border-slate-200 bg-slate-50 text-sm font-semibold text-slate-600 peer-checked:bg-emerald-50 peer-checked:border-emerald-500 peer-checked:text-emerald-700 transition-all hover:bg-slate-100">Credit Card</div>
-                            </label>
-                            <label class="cursor-pointer">
-                                <input type="radio" name="payment-method" value="Cash" class="peer sr-only">
-                                <div class="px-4 py-2 rounded-lg border border-slate-200 bg-slate-50 text-sm font-semibold text-slate-600 peer-checked:bg-emerald-50 peer-checked:border-emerald-500 peer-checked:text-emerald-700 transition-all hover:bg-slate-100">Cash</div>
-                            </label>
-                            <label class="cursor-pointer">
-                                <input type="radio" name="payment-method" value="Bank Transfer" class="peer sr-only">
-                                <div class="px-4 py-2 rounded-lg border border-slate-200 bg-slate-50 text-sm font-semibold text-slate-600 peer-checked:bg-emerald-50 peer-checked:border-emerald-500 peer-checked:text-emerald-700 transition-all hover:bg-slate-100">Bank Transfer</div>
-                            </label>
-                        </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Payment Method</label>
+                    <div class="flex flex-wrap gap-2" id="payment-chips">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="payment-method" value="UPI" class="peer sr-only" checked>
+                            <div class="px-4 py-2 rounded-lg border border-slate-200 bg-slate-50 text-sm font-semibold text-slate-600 peer-checked:bg-emerald-50 peer-checked:border-emerald-500 peer-checked:text-emerald-700 transition-all hover:bg-slate-100">UPI</div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="payment-method" value="Credit Card" class="peer sr-only">
+                            <div class="px-4 py-2 rounded-lg border border-slate-200 bg-slate-50 text-sm font-semibold text-slate-600 peer-checked:bg-emerald-50 peer-checked:border-emerald-500 peer-checked:text-emerald-700 transition-all hover:bg-slate-100">Credit Card</div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="payment-method" value="Cash" class="peer sr-only">
+                            <div class="px-4 py-2 rounded-lg border border-slate-200 bg-slate-50 text-sm font-semibold text-slate-600 peer-checked:bg-emerald-50 peer-checked:border-emerald-500 peer-checked:text-emerald-700 transition-all hover:bg-slate-100">Cash</div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="payment-method" value="Bank Transfer" class="peer sr-only">
+                            <div class="px-4 py-2 rounded-lg border border-slate-200 bg-slate-50 text-sm font-semibold text-slate-600 peer-checked:bg-emerald-50 peer-checked:border-emerald-500 peer-checked:text-emerald-700 transition-all hover:bg-slate-100">Bank Transfer</div>
+                        </label>
                     </div>
+                </div>
+                
+                <!-- Flags: Investment, Fixed Cost, Recurring -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+                    <label class="flex flex-col items-center p-3 bg-blue-50/50 border border-blue-100 rounded-xl cursor-pointer hover:bg-blue-50 transition-colors group text-center">
+                        <input type="checkbox" id="exp-investment" class="peer appearance-none w-5 h-5 border-2 border-blue-200 rounded bg-white checked:bg-blue-600 checked:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-all mb-2">
+                        <div class="text-xs font-bold text-blue-900 group-hover:text-blue-700">Investment</div>
+                    </label>
                     
-                    <!-- Investment Toggle -->
-                    <label class="flex items-center p-4 bg-blue-50/50 border border-blue-100 rounded-xl cursor-pointer hover:bg-blue-50 transition-colors group">
-                        <div class="relative flex items-center justify-center">
-                            <input type="checkbox" id="exp-investment" class="peer appearance-none w-6 h-6 border-2 border-blue-200 rounded bg-white checked:bg-blue-600 checked:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-all cursor-pointer">
-                            <i class="fa-solid fa-check absolute text-white text-xs opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity"></i>
-                        </div>
-                        <div class="ml-4 flex-1">
-                            <div class="text-sm font-bold text-blue-900 group-hover:text-blue-700 transition-colors">Mark as Investment / SIP</div>
-                            <div class="text-xs font-medium text-blue-600/70 mt-0.5">Check this if the transaction is towards savings or assets</div>
-                        </div>
+                    <label class="flex flex-col items-center p-3 bg-rose-50/50 border border-rose-100 rounded-xl cursor-pointer hover:bg-rose-50 transition-colors group text-center">
+                        <input type="checkbox" id="exp-fixed" class="peer appearance-none w-5 h-5 border-2 border-rose-200 rounded bg-white checked:bg-rose-600 checked:border-rose-600 focus:outline-none focus:ring-2 focus:ring-rose-500/30 transition-all mb-2">
+                        <div class="text-xs font-bold text-rose-900 group-hover:text-rose-700">Fixed Cost</div>
+                    </label>
+
+                    <label class="flex flex-col items-center p-3 bg-amber-50/50 border border-amber-100 rounded-xl cursor-pointer hover:bg-amber-50 transition-colors group text-center">
+                        <input type="checkbox" id="exp-recurring" class="peer appearance-none w-5 h-5 border-2 border-amber-200 rounded bg-white checked:bg-amber-500 checked:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/30 transition-all mb-2">
+                        <div class="text-xs font-bold text-amber-900 group-hover:text-amber-700">Recurring Monthly</div>
                     </label>
                 </div>
 
@@ -439,7 +447,7 @@
                     <input type="number" id="set-income" required placeholder="e.g. 50000" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all shadow-sm">
                 </div>
                 <div>
-                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Fixed Monthly Costs (₹)</label>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Fixed Monthly Costs Target (₹)</label>
                     <input type="number" id="set-fixed" required placeholder="e.g. 15000" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all shadow-sm">
                 </div>
                 <div>
@@ -504,6 +512,7 @@
         let selectedActiveMonth = "";
         let isEditMode = false;
         let editingExpenseId = null;
+        let chartViewMode = 'discretionary'; // Toggle for Doughnut Chart
 
         // Initialization
         function initApp() {
@@ -531,6 +540,9 @@
             const now = new Date();
             selectedActiveMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
+            // Auto-generate recurring transactions for the new month
+            processRecurringTransactions();
+
             populateMonthDropdown();
             populateCategoryDropdowns();
             calculateStreak();
@@ -543,6 +555,55 @@
 
         function saveSettings() {
             localStorage.setItem('finance_tracker_settings', JSON.stringify(appSettings));
+        }
+
+        // --- NEW: Recurring Transactions Auto-Generator ---
+        function processRecurringTransactions() {
+            const now = new Date();
+            const currentMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+            
+            // Find the latest template for each recurring expense
+            const recurringTemplates = new Map();
+            expenses.filter(e => e.isRecurring).forEach(e => {
+                const signature = `${e.name}_${e.category}`; // Unique signature
+                if (!recurringTemplates.has(signature)) {
+                    recurringTemplates.set(signature, e);
+                } else {
+                    const existingDate = new Date(recurringTemplates.get(signature).date);
+                    const newDate = new Date(e.date);
+                    if (newDate > existingDate) {
+                        recurringTemplates.set(signature, e);
+                    }
+                }
+            });
+
+            let addedNew = false;
+            recurringTemplates.forEach((template, signature) => {
+                const templateMonth = template.date.substring(0, 7);
+                // If template is from a past month, check if it was already created this month
+                if (templateMonth < currentMonthStr) {
+                    const alreadyExistsThisMonth = expenses.some(e => 
+                        e.date.startsWith(currentMonthStr) && 
+                        e.name === template.name && 
+                        e.category === template.category &&
+                        e.isRecurring === true
+                    );
+                    
+                    if (!alreadyExistsThisMonth) {
+                        expenses.unshift({
+                            ...template,
+                            id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+                            date: now.toISOString().split('T')[0] // Set to today
+                        });
+                        addedNew = true;
+                    }
+                }
+            });
+
+            if (addedNew) {
+                saveExpenses();
+                setTimeout(() => showToast("Recurring monthly bills auto-logged for this month.", "info"), 1000);
+            }
         }
 
         function populateMonthDropdown() {
@@ -698,7 +759,9 @@
             document.getElementById('exp-amount').value = expense.amount;
             document.getElementById('exp-date').value = expense.date;
             document.getElementById('exp-category').value = expense.category;
-            document.getElementById('exp-investment').checked = expense.isInvestment;
+            document.getElementById('exp-investment').checked = !!expense.isInvestment;
+            document.getElementById('exp-fixed').checked = !!expense.isFixed;
+            document.getElementById('exp-recurring').checked = !!expense.isRecurring;
             
             const paymentRadio = document.querySelector(`input[name="payment-method"][value="${expense.payment}"]`);
             if (paymentRadio) paymentRadio.checked = true;
@@ -715,17 +778,19 @@
             const paymentRadio = document.querySelector('input[name="payment-method"]:checked');
             const payment = paymentRadio ? paymentRadio.value : 'UPI';
             const isInvestment = document.getElementById('exp-investment').checked;
+            const isFixed = document.getElementById('exp-fixed').checked;
+            const isRecurring = document.getElementById('exp-recurring').checked;
 
             if (isEditMode && editingExpenseId) {
                 const index = expenses.findIndex(e => e.id === editingExpenseId);
                 if (index !== -1) {
-                    expenses[index] = { ...expenses[index], name, amount, date, category, payment, isInvestment };
+                    expenses[index] = { ...expenses[index], name, amount, date, category, payment, isInvestment, isFixed, isRecurring };
                     showToast("Transaction updated successfully!", "success");
                 }
             } else {
                 const newExpense = {
                     id: Date.now().toString(),
-                    name, amount, date, category, payment, isInvestment
+                    name, amount, date, category, payment, isInvestment, isFixed, isRecurring
                 };
                 expenses.unshift(newExpense);
                 showToast("Transaction logged successfully!", "success");
@@ -785,7 +850,7 @@
             
             saveSettings();
             calculateSummaryCards();
-            renderTrendChart(); // update the new 6-month trend lines
+            renderTrendChart();
             closeSettingsModal();
             showToast("Settings updated for your browser.", "success");
         }
@@ -887,10 +952,11 @@
 
         function calculateForecast() {
             const { income, fixedCost, investment } = appSettings;
-            const totalBudget = income - fixedCost - investment;
+            const totalFlexibleBudget = income - fixedCost - investment;
             
-            const monthSpent = expenses
-                .filter(item => item.date && item.date.startsWith(selectedActiveMonth) && !item.isInvestment)
+            // Forecast only cares about Discretionary Spends (non-fixed, non-invest)
+            const monthDiscSpent = expenses
+                .filter(item => item.date && item.date.startsWith(selectedActiveMonth) && !item.isInvestment && !item.isFixed)
                 .reduce((sum, item) => sum + item.amount, 0);
 
             const [year, month] = selectedActiveMonth.split('-').map(Number);
@@ -898,7 +964,7 @@
             const isCurrentMonth = (now.getFullYear() === year && (now.getMonth() + 1) === month);
             const daysInMonth = new Date(year, month, 0).getDate();
 
-            let projectedSpend = monthSpent;
+            let projectedSpend = monthDiscSpent;
             let probExceed = 0;
             let isHistorical = false;
             
@@ -910,11 +976,11 @@
 
             if (!isHistorical) {
                 const daysPassed = now.getDate();
-                const dailyRunRate = monthSpent / daysPassed;
+                const dailyRunRate = monthDiscSpent / daysPassed;
                 projectedSpend = dailyRunRate * daysInMonth;
 
-                if (totalBudget > 0) {
-                    const ratio = projectedSpend / totalBudget;
+                if (totalFlexibleBudget > 0) {
+                    const ratio = projectedSpend / totalFlexibleBudget;
                     if (ratio >= 1) {
                         probExceed = 80 + Math.min(20, (ratio - 1) * 100);
                     } else if (ratio > 0.85) {
@@ -926,16 +992,16 @@
                     probExceed = 100;
                 }
             } else {
-                projectedSpend = monthSpent;
-                probExceed = monthSpent > totalBudget ? 100 : 0;
+                projectedSpend = monthDiscSpent;
+                probExceed = monthDiscSpent > totalFlexibleBudget ? 100 : 0;
             }
 
             probExceed = Math.round(Math.min(100, Math.max(0, probExceed)));
 
-            document.getElementById('forecast-actual').innerText = `₹${monthSpent.toLocaleString('en-IN')} / ₹${totalBudget.toLocaleString('en-IN')}`;
+            document.getElementById('forecast-actual').innerText = `₹${monthDiscSpent.toLocaleString('en-IN')} / ₹${totalFlexibleBudget.toLocaleString('en-IN')}`;
             
-            const actualPct = totalBudget > 0 ? Math.min(100, (monthSpent / totalBudget) * 100) : (monthSpent > 0 ? 100 : 0);
-            const projectedPct = totalBudget > 0 ? Math.min(100, (projectedSpend / totalBudget) * 100) : (projectedSpend > 0 ? 100 : 0);
+            const actualPct = totalFlexibleBudget > 0 ? Math.min(100, (monthDiscSpent / totalFlexibleBudget) * 100) : (monthDiscSpent > 0 ? 100 : 0);
+            const projectedPct = totalFlexibleBudget > 0 ? Math.min(100, (projectedSpend / totalFlexibleBudget) * 100) : (projectedSpend > 0 ? 100 : 0);
 
             const barActual = document.getElementById('forecast-bar-actual');
             barActual.style.width = `${actualPct}%`;
@@ -955,7 +1021,7 @@
             const statusText = document.getElementById('forecast-status-text');
             
             if (isHistorical) {
-                if (monthSpent > totalBudget) {
+                if (monthDiscSpent > totalFlexibleBudget) {
                     statusBox.className = "mt-6 p-4 rounded-xl flex items-start gap-3 bg-rose-50 text-rose-800 border border-rose-100";
                     statusIcon.className = "fa-solid fa-triangle-exclamation mt-0.5 text-rose-500";
                     statusText.innerText = "Month completed. You exceeded your flexible budget.";
@@ -994,19 +1060,20 @@
             const { income, fixedCost, investment } = appSettings;
             const totalFlexibleBudget = income - fixedCost - investment;
 
-            const monthSpent = expenses
-                .filter(item => item.date && item.date.startsWith(selectedActiveMonth) && !item.isInvestment)
+            const monthDiscSpent = expenses
+                .filter(item => item.date && item.date.startsWith(selectedActiveMonth) && !item.isInvestment && !item.isFixed)
                 .reduce((sum, item) => sum + item.amount, 0);
 
-            const freeMoneyRemaining = totalFlexibleBudget - monthSpent;
+            // Calculate actual logged fixed costs to display on the card
+            const monthFixedSpent = expenses
+                .filter(item => item.date && item.date.startsWith(selectedActiveMonth) && item.isFixed)
+                .reduce((sum, item) => sum + item.amount, 0);
 
-            const updateEl = (id, val) => {
-                document.getElementById(id).innerText = val;
-            };
+            const freeMoneyRemaining = totalFlexibleBudget - monthDiscSpent;
 
-            updateEl('card-income', `₹${income.toLocaleString('en-IN')}`);
-            updateEl('card-fixed', `₹${fixedCost.toLocaleString('en-IN')}`);
-            updateEl('card-sip', `₹${investment.toLocaleString('en-IN')}`);
+            document.getElementById('card-income').innerText = `₹${income.toLocaleString('en-IN')}`;
+            document.getElementById('card-fixed').innerText = `₹${monthFixedSpent.toLocaleString('en-IN')} / ₹${fixedCost.toLocaleString('en-IN')}`;
+            document.getElementById('card-sip').innerText = `₹${investment.toLocaleString('en-IN')}`;
             
             const freeMoneyEl = document.getElementById('card-free');
             freeMoneyEl.innerText = `₹${freeMoneyRemaining.toLocaleString('en-IN')}`;
@@ -1073,6 +1140,12 @@
                 const catStyle = getBadgeStyle(item.category, 'category');
                 const payStyle = getBadgeStyle(item.payment, 'payment');
                 
+                let typeBadges = '';
+                if(item.isInvestment) typeBadges += '<div class="w-7 h-7 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100" title="Investment"><i class="fa-solid fa-leaf text-[10px]"></i></div>';
+                if(item.isFixed) typeBadges += '<div class="w-7 h-7 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center border border-rose-100" title="Fixed Cost"><i class="fa-solid fa-lock text-[10px]"></i></div>';
+                if(item.isRecurring) typeBadges += '<div class="w-7 h-7 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-100" title="Recurring Monthly"><i class="fa-solid fa-arrows-rotate text-[10px]"></i></div>';
+                if(!typeBadges) typeBadges = '<span class="text-slate-200">—</span>';
+
                 html += `
                     <tr class="hover:bg-slate-50/80 transition-colors group">
                         <td class="py-4 px-6 border-b border-slate-50">
@@ -1087,14 +1160,9 @@
                             </span>
                         </td>
                         <td class="py-4 px-6 border-b border-slate-50">
-                            <span class="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider border ${payStyle}">
-                                ${escapeHtml(item.payment)}
-                            </span>
-                        </td>
-                        <td class="py-4 px-6 border-b border-slate-50 text-center">
-                            ${item.isInvestment 
-                                ? '<div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mx-auto border border-blue-100" title="Investment"><i class="fa-solid fa-leaf text-xs"></i></div>' 
-                                : '<span class="text-slate-200">—</span>'}
+                            <div class="flex gap-1.5 justify-center">
+                                ${typeBadges}
+                            </div>
                         </td>
                         <td class="py-4 px-6 border-b border-slate-50 text-right">
                             <div class="flex items-center justify-end gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
@@ -1120,7 +1188,6 @@
             const months = [];
             let [yr, mo] = selectedActiveMonth.split('-').map(Number);
             
-            // Build the last 6 months list counting back from the actively selected month
             for(let i=5; i>=0; i--) {
                 let d = new Date(yr, mo - 1 - i, 1);
                 let mStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}`;
@@ -1137,21 +1204,24 @@
 
             months.forEach(m => {
                 const mExpenses = expenses.filter(e => e.date && e.date.startsWith(m));
-                const spent = mExpenses.filter(e => !e.isInvestment).reduce((s, e) => s + e.amount, 0);
+                
+                const spent = mExpenses.filter(e => !e.isInvestment && !e.isFixed).reduce((s, e) => s + e.amount, 0);
                 const invested = mExpenses.filter(e => e.isInvestment).reduce((s, e) => s + e.amount, 0);
+                const loggedFixed = mExpenses.filter(e => e.isFixed).reduce((s, e) => s + e.amount, 0);
+                
+                // Fallback: If no fixed costs are logged yet, use the baseline setting for historical charts
+                const finalFixed = loggedFixed > 0 ? loggedFixed : appSettings.fixedCost; 
                 
                 spendData.push(spent);
                 investData.push(invested);
-                fixedData.push(appSettings.fixedCost);
+                fixedData.push(finalFixed);
                 incomeData.push(appSettings.income);
 
-                // Calculate savings metrics for the KPI (Income - Spent - Fixed Costs)
                 totalIncome6Mo += appSettings.income;
-                let saved = appSettings.income - spent - appSettings.fixedCost;
+                let saved = appSettings.income - spent - finalFixed;
                 totalSaved6Mo += saved > 0 ? saved : 0;
             });
 
-            // Update KPI element
             const savingsRate = totalIncome6Mo > 0 ? Math.round((totalSaved6Mo / totalIncome6Mo) * 100) : 0;
             const srEl = document.getElementById('avg-savings-rate');
             if(srEl) srEl.innerText = `${savingsRate}%`;
@@ -1243,6 +1313,25 @@
             });
         }
 
+        // --- NEW: Toggle function for Doughnut Chart ---
+        function setChartView(mode) {
+            chartViewMode = mode;
+            
+            // Update button styles
+            const btnDisc = document.getElementById('btn-view-disc');
+            const btnFixed = document.getElementById('btn-view-fixed');
+            
+            if (mode === 'discretionary') {
+                btnDisc.className = 'px-4 py-1.5 rounded-md text-xs font-bold bg-slate-800 text-white shadow-sm transition-all cursor-pointer';
+                btnFixed.className = 'px-4 py-1.5 rounded-md text-xs font-bold text-slate-600 hover:bg-slate-200 transition-all cursor-pointer';
+            } else {
+                btnFixed.className = 'px-4 py-1.5 rounded-md text-xs font-bold bg-slate-800 text-white shadow-sm transition-all cursor-pointer';
+                btnDisc.className = 'px-4 py-1.5 rounded-md text-xs font-bold text-slate-600 hover:bg-slate-200 transition-all cursor-pointer';
+            }
+            
+            renderCharts();
+        }
+
         function renderCharts() {
             Chart.defaults.font.family = "'Inter', sans-serif";
             Chart.defaults.color = '#64748b';
@@ -1250,7 +1339,12 @@
             const catMap = {};
             expenses.forEach(item => {
                 if (item.date && item.date.startsWith(selectedActiveMonth) && !item.isInvestment) {
-                    catMap[item.category] = (catMap[item.category] || 0) + item.amount;
+                    // Filter based on view mode
+                    if (chartViewMode === 'discretionary' && !item.isFixed) {
+                        catMap[item.category] = (catMap[item.category] || 0) + item.amount;
+                    } else if (chartViewMode === 'fixed' && item.isFixed) {
+                        catMap[item.category] = (catMap[item.category] || 0) + item.amount;
+                    }
                 }
             });
 
@@ -1263,7 +1357,7 @@
             categoryChartInstance = new Chart(ctxCat, {
                 type: 'doughnut',
                 data: {
-                    labels: catLabels.length ? catLabels : ['No Expenses Logged'],
+                    labels: catLabels.length ? catLabels : ['No Data Logged for View'],
                     datasets: [{
                         data: catValues.length ? catValues : [1],
                         backgroundColor: catValues.length ? [
@@ -1310,7 +1404,6 @@
         }
 
         // --- Data Management Utilities ---
-
         function exportDataJSON() {
             if (expenses.length === 0) return showToast("No data to backup yet.", "info");
             
@@ -1365,7 +1458,7 @@
         function exportDataCSV() {
             if (expenses.length === 0) return showToast("No transactions to export.", "info");
             
-            let csvContent = "ID,Name,Amount,Date,Category,Payment Method,Investment\n";
+            let csvContent = "ID,Name,Amount,Date,Category,Payment Method,Investment,Fixed Cost,Recurring\n";
             
             expenses.forEach(row => {
                 const cleanName = `"${row.name.replace(/"/g, '""')}"`;
@@ -1376,7 +1469,9 @@
                     row.date,
                     row.category,
                     row.payment,
-                    row.isInvestment ? "Yes" : "No"
+                    row.isInvestment ? "Yes" : "No",
+                    row.isFixed ? "Yes" : "No",
+                    row.isRecurring ? "Yes" : "No"
                 ];
                 csvContent += rowArray.join(",") + "\n";
             });
@@ -1395,7 +1490,6 @@
             showToast("CSV exported successfully.", "success");
         }
 
-        // Custom Toast Notification
         function showToast(message, type = 'success') {
             const container = document.getElementById('toast-container');
             if(!container) return;
@@ -1425,7 +1519,6 @@
             return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
 
-        // Initialize App on window load
         window.onload = initApp;
     </script>
 </body>
