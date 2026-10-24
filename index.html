@@ -59,11 +59,14 @@
                 </div>
             </div>
             <div class="flex items-center space-x-3">
+                <button onclick="openImportModal()" class="hidden md:flex bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2.5 rounded-xl text-sm font-bold transition-all items-center gap-2 cursor-pointer active:scale-95" title="Import Statement">
+                    <i class="fa-solid fa-file-import"></i> CSV
+                </button>
                 <button onclick="openSettingsModal()" class="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all cursor-pointer" title="Financial Settings" aria-label="Financial settings">
                     <i class="fa-solid fa-gear text-lg"></i>
                 </button>
                 <button onclick="openModal()" class="hidden md:flex bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-emerald-600/20 transition-all items-center gap-2 cursor-pointer active:scale-95">
-                    <i class="fa-solid fa-plus"></i> Add Transaction
+                    <i class="fa-solid fa-plus"></i> Log
                 </button>
             </div>
         </div>
@@ -72,6 +75,9 @@
     <!-- Floating Action Button for Mobile -->
     <button aria-label="Add transaction" onclick="openModal()" class="fixed bottom-6 right-6 z-40 md:hidden w-14 h-14 bg-emerald-600 text-white rounded-full shadow-xl shadow-emerald-600/40 flex items-center justify-center text-xl hover:bg-emerald-700 transition-transform active:scale-90">
         <i class="fa-solid fa-plus"></i>
+    </button>
+    <button aria-label="Import CSV" onclick="openImportModal()" class="fixed bottom-24 right-6 z-40 md:hidden w-12 h-12 bg-slate-800 text-white rounded-full shadow-xl flex items-center justify-center text-lg hover:bg-slate-700 transition-transform active:scale-90">
+        <i class="fa-solid fa-file-import"></i>
     </button>
 
     <!-- Main Content Layout -->
@@ -122,7 +128,6 @@
 
         <!-- Section 1: Overview Cards -->
         <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            <!-- Stipend / Income Card -->
             <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
                 <div class="absolute -right-6 -top-6 w-32 h-32 bg-gradient-to-br from-emerald-50 to-emerald-100/50 rounded-full opacity-60 group-hover:scale-125 transition-transform duration-700 pointer-events-none"></div>
                 <div class="relative z-10">
@@ -137,7 +142,6 @@
                 </div>
             </div>
 
-            <!-- Fixed Cost Card -->
             <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
                 <div class="absolute -right-6 -top-6 w-32 h-32 bg-gradient-to-br from-rose-50 to-rose-100/50 rounded-full opacity-60 group-hover:scale-125 transition-transform duration-700 pointer-events-none"></div>
                 <div class="relative z-10">
@@ -147,13 +151,11 @@
                             <i class="fa-solid fa-lock text-xs"></i>
                         </div>
                     </div>
-                    <!-- Updated to show Actual / Baseline -->
                     <div class="text-2xl sm:text-3xl font-extrabold text-slate-900 mb-1 tracking-tight" id="card-fixed">₹0 / ₹0</div>
                     <p class="text-xs font-semibold text-slate-400">Actual logged vs Target</p>
                 </div>
             </div>
 
-            <!-- SIP / Investment Card -->
             <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
                 <div class="absolute -right-6 -top-6 w-32 h-32 bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-full opacity-60 group-hover:scale-125 transition-transform duration-700 pointer-events-none"></div>
                 <div class="relative z-10">
@@ -168,7 +170,6 @@
                 </div>
             </div>
 
-            <!-- Free Money Card -->
             <div class="bg-slate-900 rounded-2xl p-6 shadow-lg shadow-slate-900/20 hover:shadow-xl transition-shadow relative overflow-hidden group border border-slate-800">
                 <div class="absolute -right-6 -top-6 w-32 h-32 bg-gradient-to-br from-emerald-500/10 to-emerald-400/5 rounded-full opacity-100 group-hover:scale-150 transition-transform duration-700 pointer-events-none"></div>
                 <div class="relative z-10">
@@ -186,14 +187,12 @@
 
         <!-- Section 2: Analytics -->
         <section class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-            <!-- Doughnut Chart -->
             <div class="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm flex flex-col items-center justify-center relative overflow-hidden min-h-[400px]">
                 <div class="absolute -right-20 -top-20 w-80 h-80 bg-emerald-400/10 rounded-full blur-3xl pointer-events-none"></div>
                 <div class="absolute -left-20 -bottom-20 w-80 h-80 bg-blue-400/10 rounded-full blur-3xl pointer-events-none"></div>
                 
                 <div class="w-full text-center mb-4 relative z-10 flex flex-col items-center">
                     <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Monthly Breakdown</h2>
-                    <!-- Toggle Buttons for Discretionary vs Fixed -->
                     <div class="flex justify-center gap-2 mt-3 bg-slate-100 p-1 rounded-lg border border-slate-200">
                         <button onclick="setChartView('discretionary')" id="btn-view-disc" class="px-4 py-1.5 rounded-md text-xs font-bold bg-slate-800 text-white shadow-sm transition-all cursor-pointer">Discretionary</button>
                         <button onclick="setChartView('fixed')" id="btn-view-fixed" class="px-4 py-1.5 rounded-md text-xs font-bold text-slate-600 hover:bg-slate-200 transition-all cursor-pointer">Fixed Costs</button>
@@ -205,14 +204,12 @@
                 </div>
             </div>
 
-            <!-- Budget Forecast Card -->
             <div class="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm relative overflow-hidden flex flex-col justify-center">
                 <div class="w-full mb-6">
                     <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Budget Forecast</h2>
                     <p class="text-sm font-medium text-slate-500 mt-1">Predicting end-of-month spends via daily run-rate</p>
                 </div>
                 
-                <!-- Progress Bar -->
                 <div class="mb-4">
                     <div class="flex justify-between text-sm font-bold mb-2">
                         <span class="text-slate-700">Actual vs Budgeted</span>
@@ -224,7 +221,6 @@
                     </div>
                 </div>
 
-                <!-- Stats Grid -->
                 <div class="grid grid-cols-2 gap-4 mt-6">
                     <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
                         <div class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1">Projected Total</div>
@@ -321,10 +317,29 @@
 
     </main>
 
-    <!-- Footer -->
-    <footer class="bg-slate-50 border-t border-slate-200 mt-12 py-8 text-center text-xs font-medium text-slate-400">
-        <p>Interactive Finance Tracker Dashboard • Private Local Storage • Responsive Design</p>
-    </footer>
+    <!-- CSV Import Modal -->
+    <div id="import-modal" class="fixed inset-0 z-[60] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden transition-opacity duration-300 opacity-0">
+        <div class="bg-white rounded-[2rem] max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-slate-100 transform scale-95 transition-transform duration-300 relative" id="import-modal-content">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="text-2xl font-extrabold text-slate-900 tracking-tight">Import Statement</h3>
+                    <p class="text-sm font-medium text-slate-500 mt-1">Paste CSV data from your bank or UPI app</p>
+                </div>
+                <button onclick="closeImportModal()" class="w-10 h-10 rounded-full bg-slate-100 text-slate-500 hover:bg-rose-50 flex items-center justify-center transition-colors"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <textarea id="csv-paste-area" class="w-full h-48 p-4 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono mb-4 focus:ring-2 focus:ring-emerald-500" placeholder="Date, Narration, Chq, Value Date, Withdrawal, Deposit...&#10;12/10/2026, UPI/SWIGGY/FOOD, , 12/10/2026, 450.00, , ..."></textarea>
+            <div class="bg-blue-50/50 border border-blue-100 p-3 rounded-xl mb-6 flex gap-3">
+                <i class="fa-solid fa-wand-magic-sparkles text-blue-500 mt-0.5"></i>
+                <p class="text-xs font-medium text-blue-800 leading-relaxed">
+                    <strong>Smart Import:</strong> Just paste your raw CSV rows. The tool automatically detects dates and deducts the first numeric amount it finds per row. It skips exact duplicates.
+                </p>
+            </div>
+            <div class="flex justify-end gap-3 border-t border-slate-100 pt-4">
+                <button onclick="closeImportModal()" class="px-5 py-3 rounded-xl bg-slate-100 text-slate-600 text-sm font-bold">Cancel</button>
+                <button onclick="processCSVImport()" class="px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold shadow-lg flex items-center gap-2">Parse & Import</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Log Expense Modal -->
     <div id="expense-modal" class="fixed inset-0 z-[60] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden transition-opacity duration-300 opacity-0">
@@ -393,7 +408,6 @@
                     </div>
                 </div>
                 
-                <!-- Flags: Investment, Fixed Cost, Recurring -->
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
                     <label class="flex flex-col items-center p-3 bg-blue-50/50 border border-blue-100 rounded-xl cursor-pointer hover:bg-blue-50 transition-colors group text-center">
                         <input type="checkbox" id="exp-investment" class="peer appearance-none w-5 h-5 border-2 border-blue-200 rounded bg-white checked:bg-blue-600 checked:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-all mb-2">
@@ -452,17 +466,24 @@
                 </div>
 
                 <div class="pt-4 border-t border-slate-100">
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Auto-Categorization Rules</label>
+                    <div class="flex gap-2 mb-3">
+                        <input type="text" id="new-rule-keyword" placeholder="Keyword (e.g. IRCTC)" class="w-1/2 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <select id="new-rule-category" class="w-1/2 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500"></select>
+                        <button type="button" onclick="addAutoRule()" class="px-4 py-2 bg-blue-100 text-blue-700 hover:bg-blue-200 rounded-xl text-sm font-bold transition-colors cursor-pointer">Add</button>
+                    </div>
+                    <div id="settings-rules-list" class="max-h-32 overflow-y-auto space-y-2 custom-scrollbar pr-2 mb-4"></div>
+                </div>
+
+                <div class="pt-4 border-t border-slate-100">
                     <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">Manage Categories</label>
                     <div class="flex gap-2 mb-3">
                         <input type="text" id="new-category-input" placeholder="New category name..." class="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <button type="button" onclick="addCustomCategory()" class="px-4 py-2 bg-blue-100 text-blue-700 hover:bg-blue-200 rounded-xl text-sm font-bold transition-colors cursor-pointer">Add</button>
                     </div>
-                    <div id="settings-categories-list" class="max-h-32 overflow-y-auto space-y-2 custom-scrollbar pr-2">
-                        <!-- Dynamically populated -->
-                    </div>
+                    <div id="settings-categories-list" class="max-h-32 overflow-y-auto space-y-2 custom-scrollbar pr-2"></div>
                 </div>
 
-                <!-- Data Management Section -->
                 <div class="pt-5 pb-2 border-t border-slate-100">
                     <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-3">Data Management</label>
                     <div class="grid grid-cols-2 gap-3">
@@ -492,19 +513,27 @@
 
     <!-- Application JavaScript Logic -->
     <script>
-        // Default App Settings
         const defaultSettings = {
             categories: ['Housing', 'Groceries', 'Transport', 'Utilities', 'Entertainment', 'Personal', 'Other'],
-            monthlyData: {} // Keyed by "YYYY-MM"
+            monthlyData: {},
+            autoRules: []
         };
 
         function localISO(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
-        function freshSettings() { return { categories: [...defaultSettings.categories], monthlyData: {} }; }
+        function freshSettings() { return { categories: [...defaultSettings.categories], monthlyData: {}, autoRules: [] }; }
         function newId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
         function loadSkips() { try { return JSON.parse(localStorage.getItem('finance_tracker_skips') || '[]'); } catch (e) { return []; } }
         function addSkip(k) { const a = loadSkips(); if (!a.includes(k)) { a.push(k); localStorage.setItem('finance_tracker_skips', JSON.stringify(a)); } }
         function removeSkip(k) { localStorage.setItem('finance_tracker_skips', JSON.stringify(loadSkips().filter(x => x !== k))); }
-        function getMonthBudget(ym) { return appSettings.monthlyData[ym] || { income: 0, fixedCost: 0, investment: 0 }; }
+        
+        // Smart Waterfall Budget: Inherit from previous month if not set
+        function getMonthBudget(ym) { 
+            if (appSettings.monthlyData && appSettings.monthlyData[ym]) return appSettings.monthlyData[ym];
+            const sorted = Object.keys(appSettings.monthlyData || {}).sort().reverse();
+            for (let m of sorted) { if (m <= ym) return appSettings.monthlyData[m]; }
+            if (sorted.length > 0) return appSettings.monthlyData[sorted[sorted.length - 1]];
+            return { income: 0, fixedCost: 0, investment: 0 }; 
+        }
         
         function sanitizeImport(d) {
             if (!d || !Array.isArray(d.expenses) || !d.settings) return null;
@@ -516,7 +545,8 @@
             }
             const cats = Array.isArray(d.settings.categories) ? d.settings.categories.filter(c => typeof c === 'string' && c.trim()).map(c => c.slice(0, 50)) : [];
             const mData = d.settings.monthlyData || {};
-            return { expenses: ex, settings: { monthlyData: mData, categories: cats.length ? cats : [...defaultSettings.categories] } };
+            const aRules = d.settings.autoRules || [];
+            return { expenses: ex, settings: { monthlyData: mData, autoRules: aRules, categories: cats.length ? cats : [...defaultSettings.categories] } };
         }
         function afterDataChange() { saveExpenses(); populateMonthDropdown(); populateCategoryDropdowns(); calculateStreak(); renderAll(); }
         function showUndoToast(msg, undo) {
@@ -529,30 +559,12 @@
         }
         function postInit() {
             if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
-            document.querySelectorAll('label.block').forEach(l => {
-                const c = l.nextElementSibling; const f = c && (c.matches('input,select') ? c : c.querySelector('input,select'));
-                if (f && f.id) l.htmlFor = f.id;
-            });
-            ['expense-modal-content', 'settings-modal-content'].forEach(id => { const m = document.getElementById(id); m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true'); });
             const last = parseInt(localStorage.getItem('finance_tracker_lastbackup') || '0');
             if (expenses.length > 0 && Date.now() - last > 14 * 86400000) {
                 setTimeout(() => showToast(last ? 'Last backup was over 2 weeks ago. Export one from Settings.' : 'No backup yet. Export one from Settings.', 'info'), 2500);
             }
         }
-        document.addEventListener('keydown', e => {
-            const open = ['expense-modal', 'settings-modal'].map(id => document.getElementById(id)).find(m => !m.classList.contains('hidden'));
-            if (!open) return;
-            if (e.key === 'Escape') { open.id === 'expense-modal' ? closeModal() : closeSettingsModal(); return; }
-            if (e.key === 'Tab') {
-                const f = [...open.querySelectorAll('button,input,select')].filter(x => !x.disabled && x.type !== 'file');
-                if (!f.length) return;
-                const first = f[0], lastEl = f[f.length - 1];
-                if (e.shiftKey && document.activeElement === first) { e.preventDefault(); lastEl.focus(); }
-                else if (!e.shiftKey && document.activeElement === lastEl) { e.preventDefault(); first.focus(); }
-            }
-        });
 
-        // Global State Variables
         let appSettings = freshSettings();
         let expenses = [];
         let categoryChartInstance = null;
@@ -560,66 +572,45 @@
         let selectedActiveMonth = "";
         let isEditMode = false;
         let editingExpenseId = null;
-        let chartViewMode = 'discretionary'; // Toggle for Doughnut Chart
+        let chartViewMode = 'discretionary'; 
 
-        // Initialization
         function initApp() {
-            // Load Settings from Local Storage
             const savedSettings = localStorage.getItem('finance_tracker_settings');
             if (savedSettings) {
                 try { 
                     appSettings = JSON.parse(savedSettings); 
-                    
-                    // Legacy Migration to Per-Month Structure
                     if (appSettings.income !== undefined) {
                         const legInc = appSettings.income || 0;
                         const legFix = appSettings.fixedCost || 0;
                         const legInv = appSettings.investment || 0;
                         appSettings.monthlyData = {};
-                        
                         const nowStr = localISO(new Date()).substring(0, 7);
                         appSettings.monthlyData[nowStr] = { income: legInc, fixedCost: legFix, investment: legInv };
-                        
-                        delete appSettings.income;
-                        delete appSettings.fixedCost;
-                        delete appSettings.investment;
+                        delete appSettings.income; delete appSettings.fixedCost; delete appSettings.investment;
                         saveSettings();
                     }
-                    if (!appSettings.categories) {
-                        appSettings.categories = [...defaultSettings.categories];
-                    }
+                    if (!appSettings.categories) appSettings.categories = [...defaultSettings.categories];
+                    if (!appSettings.autoRules) appSettings.autoRules = [];
                 } catch(e) { appSettings = freshSettings(); }
             } else {
                 appSettings = freshSettings();
                 localStorage.setItem('finance_tracker_settings', JSON.stringify(appSettings));
             }
 
-            // Load Expenses from Local Storage
             const savedExpenses = localStorage.getItem('finance_tracker_v3');
-            if (savedExpenses) {
-                try { expenses = JSON.parse(savedExpenses); } catch(e) { expenses = []; }
-            }
+            if (savedExpenses) { try { expenses = JSON.parse(savedExpenses); } catch(e) { expenses = []; } }
 
-            // Default to current month
             const now = new Date();
             selectedActiveMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-
-            // Auto-generate recurring transactions for the new month
             processRecurringTransactions();
-
             populateMonthDropdown();
             populateCategoryDropdowns();
             calculateStreak();
             renderAll();
         }
 
-        function saveExpenses() {
-            localStorage.setItem('finance_tracker_v3', JSON.stringify(expenses));
-        }
-
-        function saveSettings() {
-            localStorage.setItem('finance_tracker_settings', JSON.stringify(appSettings));
-        }
+        function saveExpenses() { localStorage.setItem('finance_tracker_v3', JSON.stringify(expenses)); }
+        function saveSettings() { localStorage.setItem('finance_tracker_settings', JSON.stringify(appSettings)); }
 
         function processRecurringTransactions() {
             const todayISO = localISO(new Date());
@@ -646,28 +637,17 @@
                     added++;
                 }
             });
-            if (added) {
-                saveExpenses();
-                setTimeout(() => showToast(added + ' recurring bill(s) auto-logged.', 'info'), 1000);
-            }
+            if (added) { saveExpenses(); setTimeout(() => showToast(added + ' recurring bill(s) auto-logged.', 'info'), 1000); }
         }
 
         function populateMonthDropdown() {
             const monthSelect = document.getElementById('active-month-select');
             const monthsSet = new Set();
-            
             const now = new Date();
             monthsSet.add(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`);
-
-            expenses.forEach(item => {
-                if (item.date && item.date.length >= 7) {
-                    monthsSet.add(item.date.substring(0, 7));
-                }
-            });
-
+            expenses.forEach(item => { if (item.date && item.date.length >= 7) monthsSet.add(item.date.substring(0, 7)); });
             const sortedMonths = Array.from(monthsSet).sort().reverse();
             let html = '';
-            
             sortedMonths.forEach(ym => {
                 const [year, month] = ym.split('-');
                 const dateObj = new Date(year, parseInt(month) - 1, 1);
@@ -675,131 +655,138 @@
                 const isSelected = ym === selectedActiveMonth ? 'selected' : '';
                 html += `<option value="${ym}" ${isSelected} class="font-semibold">${monthName}</option>`;
             });
-
             monthSelect.innerHTML = html;
             if (monthSelect.value) selectedActiveMonth = monthSelect.value;
         }
 
-        function changeActiveMonth() {
-            selectedActiveMonth = document.getElementById('active-month-select').value;
-            renderAll();
-        }
+        function changeActiveMonth() { selectedActiveMonth = document.getElementById('active-month-select').value; renderAll(); }
 
         function populateCategoryDropdowns() {
             const filterCatSelect = document.getElementById('category-filter');
             const expCatSelect = document.getElementById('exp-category');
+            const ruleCatSelect = document.getElementById('new-rule-category');
             
             let filterOptionsHtml = '<option value="">All Categories</option>';
             let expOptionsHtml = '';
             
             const allFilterCats = [...new Set([...appSettings.categories, ...expenses.map(e => e.category)])].sort();
-            
-            allFilterCats.forEach(cat => {
-                filterOptionsHtml += `<option value="${escapeHtml(cat)}">${escapeHtml(cat)}</option>`;
-            });
+            allFilterCats.forEach(cat => filterOptionsHtml += `<option value="${escapeHtml(cat)}">${escapeHtml(cat)}</option>`);
 
             const activeCats = [...appSettings.categories].sort();
-            activeCats.forEach(cat => {
-                expOptionsHtml += `<option value="${escapeHtml(cat)}">${escapeHtml(cat)}</option>`;
-            });
+            activeCats.forEach(cat => expOptionsHtml += `<option value="${escapeHtml(cat)}">${escapeHtml(cat)}</option>`);
 
-            filterCatSelect.innerHTML = filterOptionsHtml;
+            if(filterCatSelect) filterCatSelect.innerHTML = filterOptionsHtml;
             if(expCatSelect) expCatSelect.innerHTML = expOptionsHtml;
+            if(ruleCatSelect) ruleCatSelect.innerHTML = expOptionsHtml;
         }
 
         function calculateStreak() {
-            if (expenses.length === 0) {
-                document.getElementById('streak-count').innerText = "0";
-                return;
-            }
-
+            if (expenses.length === 0) { document.getElementById('streak-count').innerText = "0"; return; }
             const uniqueDates = [...new Set(expenses.map(e => e.date))].sort().reverse();
-            let streak = 0;
-            let currentCheck = new Date();
+            let streak = 0, currentCheck = new Date();
             currentCheck.setHours(0,0,0,0);
-
             const dateSet = new Set(uniqueDates);
             const todayStr = localISO(currentCheck);
-            
             let yesterdayCheck = new Date(currentCheck);
             yesterdayCheck.setDate(yesterdayCheck.getDate() - 1);
             const yesterdayStr = localISO(yesterdayCheck);
-
             let checkDate = new Date();
             
-            if (dateSet.has(todayStr)) {
-                checkDate = new Date(currentCheck);
-            } else if (dateSet.has(yesterdayStr)) {
-                checkDate = new Date(yesterdayCheck);
-            } else {
-                document.getElementById('streak-count').innerText = "0";
-                return;
-            }
+            if (dateSet.has(todayStr)) checkDate = new Date(currentCheck);
+            else if (dateSet.has(yesterdayStr)) checkDate = new Date(yesterdayCheck);
+            else { document.getElementById('streak-count').innerText = "0"; return; }
 
             while(true) {
                 const dateStr = localISO(checkDate);
-                if (dateSet.has(dateStr)) {
-                    streak++;
-                    checkDate.setDate(checkDate.getDate() - 1);
-                } else {
-                    break;
-                }
+                if (dateSet.has(dateStr)) { streak++; checkDate.setDate(checkDate.getDate() - 1); } 
+                else break;
             }
-
             document.getElementById('streak-count').innerText = streak;
         }
 
         function openModal(isEdit = false) {
             const modal = document.getElementById('expense-modal');
             const title = modal.querySelector('h3');
-            const subtitle = modal.querySelector('h3 + p');
             const submitBtn = modal.querySelector('button[type="submit"]');
 
             if (!isEdit) {
-                isEditMode = false;
-                editingExpenseId = null;
+                isEditMode = false; editingExpenseId = null;
                 document.getElementById('expense-form').reset();
                 document.getElementById('exp-date').value = localISO(new Date());
                 document.querySelector('input[name="payment-method"][value="UPI"]').checked = true;
-                
                 title.innerText = "Add Transaction";
-                subtitle.innerText = "Log a new expense or investment";
                 submitBtn.innerHTML = `Save Transaction <i class="fa-solid fa-arrow-right text-xs ml-1"></i>`;
             } else {
                 title.innerText = "Edit Transaction";
-                subtitle.innerText = "Update the details of your log";
                 submitBtn.innerHTML = `Update Transaction <i class="fa-solid fa-check text-xs ml-1"></i>`;
             }
-
             modal.classList.remove('hidden');
-            requestAnimationFrame(() => {
-                modal.style.opacity = '1';
-                document.getElementById('expense-modal-content').classList.remove('scale-95');
-                document.getElementById('expense-modal-content').classList.add('scale-100');
-            });
+            requestAnimationFrame(() => { modal.style.opacity = '1'; document.getElementById('expense-modal-content').classList.replace('scale-95', 'scale-100'); });
         }
 
         function closeModal() {
             const modal = document.getElementById('expense-modal');
             modal.style.opacity = '0';
-            document.getElementById('expense-modal-content').classList.remove('scale-100');
-            document.getElementById('expense-modal-content').classList.add('scale-95');
+            document.getElementById('expense-modal-content').classList.replace('scale-100', 'scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); document.getElementById('expense-form').reset(); isEditMode = false; editingExpenseId = null; }, 300);
+        }
+
+        function openImportModal() {
+            const modal = document.getElementById('import-modal');
+            modal.classList.remove('hidden');
+            requestAnimationFrame(() => { modal.style.opacity = '1'; document.getElementById('import-modal-content').classList.replace('scale-95', 'scale-100'); });
+        }
+        function closeImportModal() {
+            const modal = document.getElementById('import-modal');
+            modal.style.opacity = '0';
+            document.getElementById('import-modal-content').classList.replace('scale-100', 'scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); document.getElementById('csv-paste-area').value = ''; }, 300);
+        }
+
+        function processCSVImport() {
+            const text = document.getElementById('csv-paste-area').value;
+            const lines = text.split('\n');
+            let count = 0;
+            lines.forEach(line => {
+                const cols = line.split(',').map(c => c.trim().replace(/^"|"$/g, ''));
+                let date = null, amount = null, name = "";
+                cols.forEach(col => {
+                    let cleanCol = col.replace(/,/g, '');
+                    let dMatch1 = cleanCol.match(/^(\d{2})[\/\-](\d{2})[\/\-](\d{4})$/);
+                    let dMatch2 = cleanCol.match(/^(\d{4})[\/\-](\d{2})[\/\-](\d{2})$/);
+                    
+                    if (!date && dMatch1) date = `${dMatch1[3]}-${dMatch1[2]}-${dMatch1[1]}`;
+                    else if (!date && dMatch2) date = cleanCol;
+                    else if (amount === null && cleanCol.match(/^-?[\d\.]+$/) && parseFloat(cleanCol) !== 0) amount = Math.abs(parseFloat(cleanCol));
+                    else if (isNaN(cleanCol) && cleanCol.length > 2 && !cleanCol.match(/^[A-Z]{2,3}$/)) name += col + " ";
+                });
+                
+                if (date && amount) {
+                    let category = 'Other';
+                    let testName = name.toLowerCase();
+                    for (let rule of appSettings.autoRules || []) {
+                        if (testName.includes(rule.keyword.toLowerCase())) { category = rule.category; break; }
+                    }
+                    if (!expenses.some(e => e.date === date && e.amount === amount)) {
+                        expenses.unshift({ id: newId(), name: name.trim() || 'Imported Transaction', amount, date, category, payment: 'Bank Transfer', isInvestment: false, isFixed: false, isRecurring: false });
+                        count++;
+                    }
+                }
+            });
             
-            setTimeout(() => {
-                modal.classList.add('hidden');
-                document.getElementById('expense-form').reset();
-                isEditMode = false;
-                editingExpenseId = null;
-            }, 300);
+            if (count > 0) {
+                closeImportModal();
+                afterDataChange();
+                showToast(`${count} transactions imported & categorized.`, 'success');
+            } else {
+                showToast('No valid new transactions found.', 'info');
+            }
         }
 
         function editExpense(id) {
             const expense = expenses.find(e => e.id === id);
             if (!expense) return;
-
-            isEditMode = true;
-            editingExpenseId = id;
-
+            isEditMode = true; editingExpenseId = id;
             document.getElementById('exp-name').value = expense.name;
             document.getElementById('exp-amount').value = expense.amount;
             document.getElementById('exp-date').value = expense.date;
@@ -807,10 +794,8 @@
             document.getElementById('exp-investment').checked = !!expense.isInvestment;
             document.getElementById('exp-fixed').checked = !!expense.isFixed;
             document.getElementById('exp-recurring').checked = !!expense.isRecurring;
-            
             const paymentRadio = document.querySelector(`input[name="payment-method"][value="${expense.payment}"]`);
             if (paymentRadio) paymentRadio.checked = true;
-
             openModal(true);
         }
 
@@ -835,28 +820,12 @@
                     showToast("Transaction updated successfully!", "success");
                 }
             } else {
-                const newExpense = {
-                    id: Date.now().toString(),
-                    name, amount, date, category, payment, isInvestment, isFixed, isRecurring
-                };
-                expenses.unshift(newExpense);
+                expenses.unshift({ id: newId(), name, amount, date, category, payment, isInvestment, isFixed, isRecurring });
                 showToast("Transaction logged successfully!", "success");
             }
-
-            saveExpenses();
-            
-            if (!document.querySelector(`#active-month-select option[value="${date.substring(0,7)}"]`)) {
-                populateMonthDropdown();
-            }
-            
-            if(selectedActiveMonth !== date.substring(0,7)) {
-                selectedActiveMonth = date.substring(0,7);
-                document.getElementById('active-month-select').value = selectedActiveMonth;
-            }
-
-            populateCategoryDropdowns();
-            calculateStreak();
-            renderAll();
+            if (!document.querySelector(`#active-month-select option[value="${date.substring(0,7)}"]`)) populateMonthDropdown();
+            if(selectedActiveMonth !== date.substring(0,7)) { selectedActiveMonth = date.substring(0,7); document.getElementById('active-month-select').value = selectedActiveMonth; }
+            afterDataChange();
             closeModal();
         }
 
@@ -870,26 +839,18 @@
             document.getElementById('set-invest').value = mb.investment || '';
 
             renderCategoriesList();
+            renderRulesList();
 
             const modal = document.getElementById('settings-modal');
             modal.classList.remove('hidden');
-            
-            requestAnimationFrame(() => {
-                modal.style.opacity = '1';
-                document.getElementById('settings-modal-content').classList.remove('scale-95');
-                document.getElementById('settings-modal-content').classList.add('scale-100');
-            });
+            requestAnimationFrame(() => { modal.style.opacity = '1'; document.getElementById('settings-modal-content').classList.replace('scale-95', 'scale-100'); });
         }
 
         function closeSettingsModal() {
             const modal = document.getElementById('settings-modal');
             modal.style.opacity = '0';
-            document.getElementById('settings-modal-content').classList.remove('scale-100');
-            document.getElementById('settings-modal-content').classList.add('scale-95');
-            
-            setTimeout(() => {
-                modal.classList.add('hidden');
-            }, 300);
+            document.getElementById('settings-modal-content').classList.replace('scale-100', 'scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); }, 300);
         }
 
         function handleSettingsSubmit(event) {
@@ -897,29 +858,41 @@
             const income = parseFloat(document.getElementById('set-income').value) || 0;
             const fixedCost = parseFloat(document.getElementById('set-fixed').value) || 0;
             const investment = parseFloat(document.getElementById('set-invest').value) || 0;
-            
             appSettings.monthlyData[selectedActiveMonth] = { income, fixedCost, investment };
             saveSettings();
-            
-            calculateSummaryCards();
-            renderTrendChart();
-            calculateForecast();
-            closeSettingsModal();
+            calculateSummaryCards(); renderTrendChart(); calculateForecast(); closeSettingsModal();
             showToast("Monthly targets saved.", "success");
         }
 
         function resetSettingsToDefault() {
             if (confirm("Reset completely to factory defaults for all months?")) {
                 appSettings = freshSettings();
-                document.getElementById('set-income').value = '';
-                document.getElementById('set-fixed').value = '';
-                document.getElementById('set-invest').value = '';
-                saveSettings();
-                renderCategoriesList();
-                populateCategoryDropdowns();
-                calculateSummaryCards();
-                renderTrendChart();
+                document.getElementById('set-income').value = ''; document.getElementById('set-fixed').value = ''; document.getElementById('set-invest').value = '';
+                saveSettings(); renderCategoriesList(); renderRulesList(); populateCategoryDropdowns(); calculateSummaryCards(); renderTrendChart();
             }
+        }
+
+        function addAutoRule() {
+            const kw = document.getElementById('new-rule-keyword').value.trim();
+            const cat = document.getElementById('new-rule-category').value;
+            if(kw && cat) {
+                appSettings.autoRules.push({ keyword: kw, category: cat });
+                saveSettings(); renderRulesList();
+                document.getElementById('new-rule-keyword').value = '';
+                showToast("Rule added.", "success");
+            }
+        }
+        function deleteAutoRule(idx) { appSettings.autoRules.splice(idx, 1); saveSettings(); renderRulesList(); }
+        
+        function renderRulesList() {
+            const el = document.getElementById('settings-rules-list');
+            if(!el) return;
+            el.innerHTML = (appSettings.autoRules || []).map((r, i) => `
+                <div class="flex items-center justify-between bg-slate-50 border border-slate-100 px-3 py-2 rounded-lg">
+                    <span class="text-sm font-semibold text-slate-700">Contains <b class="text-blue-600">"${escapeHtml(r.keyword)}"</b> &rarr; ${escapeHtml(r.category)}</span>
+                    <button type="button" onclick="deleteAutoRule(${i})" class="text-slate-400 hover:text-rose-500"><i class="fa-solid fa-trash-can text-xs"></i></button>
+                </div>
+            `).join('');
         }
 
         function renderCategoriesList() {
@@ -929,9 +902,7 @@
                 listEl.innerHTML += `
                     <div class="flex items-center justify-between bg-slate-50 border border-slate-100 px-3 py-2 rounded-lg">
                         <span class="text-sm font-semibold text-slate-700">${escapeHtml(cat)}</span>
-                        <button type="button" data-cat="${escapeHtml(cat)}" onclick="deleteCustomCategory(this.dataset.cat)" class="text-slate-400 hover:text-rose-500 transition-colors cursor-pointer p-1" title="Delete Category" aria-label="Delete category">
-                            <i class="fa-solid fa-trash-can text-xs pointer-events-none"></i>
-                        </button>
+                        <button type="button" data-cat="${escapeHtml(cat)}" onclick="deleteCustomCategory(this.dataset.cat)" class="text-slate-400 hover:text-rose-500 transition-colors cursor-pointer p-1" title="Delete Category" aria-label="Delete category"><i class="fa-solid fa-trash-can text-xs pointer-events-none"></i></button>
                     </div>
                 `;
             });
@@ -940,29 +911,13 @@
         function addCustomCategory() {
             const input = document.getElementById('new-category-input');
             const newCat = input.value.trim();
-            if (newCat && !appSettings.categories.includes(newCat)) {
-                appSettings.categories.push(newCat);
-                saveSettings();
-                renderCategoriesList();
-                populateCategoryDropdowns();
-                input.value = '';
-                showToast("Category added", "success");
-            } else if (appSettings.categories.includes(newCat)) {
-                showToast("Category already exists", "info");
-            }
+            if (newCat && !appSettings.categories.includes(newCat)) { appSettings.categories.push(newCat); saveSettings(); renderCategoriesList(); populateCategoryDropdowns(); input.value = ''; showToast("Category added", "success"); }
+            else if (appSettings.categories.includes(newCat)) { showToast("Category already exists", "info"); }
         }
 
         function deleteCustomCategory(cat) {
-            if (appSettings.categories.length <= 1) {
-                showToast("You must have at least one category.", "error");
-                return;
-            }
-            appSettings.categories = appSettings.categories.filter(c => c !== cat);
-            saveSettings();
-            renderCategoriesList();
-            populateCategoryDropdowns();
-            filterExpenses();
-            showToast("Category removed", "info");
+            if (appSettings.categories.length <= 1) { showToast("You must have at least one category.", "error"); return; }
+            appSettings.categories = appSettings.categories.filter(c => c !== cat); saveSettings(); renderCategoriesList(); populateCategoryDropdowns(); filterExpenses(); showToast("Category removed", "info");
         }
 
         function deleteExpense(id) {
@@ -972,63 +927,38 @@
             const skipKey = removed.name + '_' + removed.category + '|' + removed.date.substring(0, 7);
             if (removed.isRecurring) addSkip(skipKey);
             afterDataChange();
-            showUndoToast('Transaction deleted.', () => {
-                expenses.splice(Math.min(idx, expenses.length), 0, removed);
-                if (removed.isRecurring) removeSkip(skipKey);
-                afterDataChange();
-            });
+            showUndoToast('Transaction deleted.', () => { expenses.splice(Math.min(idx, expenses.length), 0, removed); if (removed.isRecurring) removeSkip(skipKey); afterDataChange(); });
         }
 
         function getWeekNumber(d) {
             d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
             d.setUTCDate(d.getDate() + 4 - (d.getUTCDay()||7));
             var yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
-            var weekNo = Math.ceil((((d - yearStart) / 86400000) + 1)/7);
-            return `Wk ${weekNo}`;
+            return `Wk ${Math.ceil((((d - yearStart) / 86400000) + 1)/7)}`;
         }
 
-        function renderAll() {
-            renderExpenseTable();
-            renderCharts();
-            renderTrendChart();
-            calculateSummaryCards();
-            calculateForecast();
-            calculateWealth();
-        }
+        function renderAll() { renderExpenseTable(); renderCharts(); renderTrendChart(); calculateSummaryCards(); calculateForecast(); calculateWealth(); }
 
         function calculateWealth() {
-            const totalWealth = expenses
-                .filter(item => item.isInvestment)
-                .reduce((sum, item) => sum + item.amount, 0);
-            
+            const totalWealth = expenses.filter(item => item.isInvestment).reduce((sum, item) => sum + item.amount, 0);
             const wealthEl = document.getElementById('all-time-wealth');
-            if (wealthEl) {
-                wealthEl.innerText = `₹${totalWealth.toLocaleString('en-IN')}`;
-            }
+            if (wealthEl) wealthEl.innerText = `₹${totalWealth.toLocaleString('en-IN')}`;
         }
 
         function calculateForecast() {
             const { income, fixedCost, investment } = getMonthBudget(selectedActiveMonth);
             const totalFlexibleBudget = income - fixedCost - investment;
             
-            const monthDiscSpent = expenses
-                .filter(item => item.date && item.date.startsWith(selectedActiveMonth) && !item.isInvestment && !item.isFixed)
-                .reduce((sum, item) => sum + item.amount, 0);
+            const monthDiscSpent = expenses.filter(item => item.date && item.date.startsWith(selectedActiveMonth) && !item.isInvestment && !item.isFixed).reduce((sum, item) => sum + item.amount, 0);
 
             const [year, month] = selectedActiveMonth.split('-').map(Number);
             const now = new Date();
             const isCurrentMonth = (now.getFullYear() === year && (now.getMonth() + 1) === month);
             const daysInMonth = new Date(year, month, 0).getDate();
 
-            let projectedSpend = monthDiscSpent;
-            let probExceed = 0;
-            let isHistorical = false;
-            
-            if (now.getFullYear() > year || (now.getFullYear() === year && now.getMonth() + 1 > month)) {
-                isHistorical = true;
-            } else if (now.getFullYear() < year || (now.getFullYear() === year && now.getMonth() + 1 < month)) {
-                isHistorical = true;
-            }
+            let projectedSpend = monthDiscSpent, probExceed = 0, isHistorical = false;
+            if (now.getFullYear() > year || (now.getFullYear() === year && now.getMonth() + 1 > month)) isHistorical = true;
+            else if (now.getFullYear() < year || (now.getFullYear() === year && now.getMonth() + 1 < month)) isHistorical = true;
 
             if (!isHistorical) {
                 const daysPassed = now.getDate();
@@ -1039,93 +969,51 @@
 
                 if (totalFlexibleBudget > 0) {
                     const ratio = projectedSpend / totalFlexibleBudget;
-                    if (ratio >= 1) {
-                        probExceed = 80 + Math.min(20, (ratio - 1) * 100);
-                    } else if (ratio > 0.85) {
-                        probExceed = 40 + ((ratio - 0.85) / 0.15) * 40;
-                    } else {
-                        probExceed = ratio * 30;
-                    }
-                } else if (projectedSpend > 0) {
-                    probExceed = 100;
-                }
+                    if (ratio >= 1) probExceed = 80 + Math.min(20, (ratio - 1) * 100);
+                    else if (ratio > 0.85) probExceed = 40 + ((ratio - 0.85) / 0.15) * 40;
+                    else probExceed = ratio * 30;
+                } else if (projectedSpend > 0) probExceed = 100;
             } else {
                 projectedSpend = monthDiscSpent;
                 probExceed = monthDiscSpent > totalFlexibleBudget ? 100 : 0;
             }
 
-            probExceed = Math.round(Math.min(100, Math.max(0, probExceed)));
-
             document.getElementById('forecast-actual').innerText = `₹${monthDiscSpent.toLocaleString('en-IN')} / ₹${totalFlexibleBudget.toLocaleString('en-IN')}`;
-            
             const actualPct = totalFlexibleBudget > 0 ? Math.min(100, (monthDiscSpent / totalFlexibleBudget) * 100) : (monthDiscSpent > 0 ? 100 : 0);
             const projectedPct = totalFlexibleBudget > 0 ? Math.min(100, (projectedSpend / totalFlexibleBudget) * 100) : (projectedSpend > 0 ? 100 : 0);
 
             const barActual = document.getElementById('forecast-bar-actual');
             barActual.style.width = `${actualPct}%`;
-            if (actualPct >= 100) {
-                barActual.className = "h-4 rounded-full transition-all duration-1000 bg-rose-500";
-            } else if (actualPct > 80) {
-                barActual.className = "h-4 rounded-full transition-all duration-1000 bg-orange-400";
-            } else {
-                barActual.className = "h-4 rounded-full transition-all duration-1000 bg-emerald-500";
-            }
+            if (actualPct >= 100) barActual.className = "h-4 rounded-full transition-all duration-1000 bg-rose-500";
+            else if (actualPct > 80) barActual.className = "h-4 rounded-full transition-all duration-1000 bg-orange-400";
+            else barActual.className = "h-4 rounded-full transition-all duration-1000 bg-emerald-500";
 
             document.getElementById('forecast-projected').innerText = `₹${Math.round(projectedSpend).toLocaleString('en-IN')}`;
-            document.getElementById('forecast-probability').innerText = `${probExceed}%`;
+            document.getElementById('forecast-probability').innerText = `${Math.round(Math.min(100, Math.max(0, probExceed)))}%`;
 
             const statusBox = document.getElementById('forecast-status-box');
             const statusIcon = document.getElementById('forecast-icon');
             const statusText = document.getElementById('forecast-status-text');
             
             if (isHistorical) {
-                if (monthDiscSpent > totalFlexibleBudget) {
-                    statusBox.className = "mt-6 p-4 rounded-xl flex items-start gap-3 bg-rose-50 text-rose-800 border border-rose-100";
-                    statusIcon.className = "fa-solid fa-triangle-exclamation mt-0.5 text-rose-500";
-                    statusText.innerText = "Month completed. You exceeded your flexible budget.";
-                } else {
-                    statusBox.className = "mt-6 p-4 rounded-xl flex items-start gap-3 bg-emerald-50 text-emerald-800 border border-emerald-100";
-                    statusIcon.className = "fa-solid fa-circle-check mt-0.5 text-emerald-500";
-                    statusText.innerText = "Month completed. You stayed within your budget!";
-                }
+                if (monthDiscSpent > totalFlexibleBudget) { statusBox.className = "mt-6 p-4 rounded-xl flex items-start gap-3 bg-rose-50 text-rose-800 border border-rose-100"; statusIcon.className = "fa-solid fa-triangle-exclamation mt-0.5 text-rose-500"; statusText.innerText = "Month completed. You exceeded your flexible budget."; } 
+                else { statusBox.className = "mt-6 p-4 rounded-xl flex items-start gap-3 bg-emerald-50 text-emerald-800 border border-emerald-100"; statusIcon.className = "fa-solid fa-circle-check mt-0.5 text-emerald-500"; statusText.innerText = "Month completed. You stayed within your budget!"; }
             } else {
-                if (probExceed > 75) {
-                    statusBox.className = "mt-6 p-4 rounded-xl flex items-start gap-3 bg-rose-50 text-rose-800 border border-rose-100";
-                    statusIcon.className = "fa-solid fa-triangle-exclamation mt-0.5 text-rose-500";
-                    statusText.innerText = "High risk of overspending! Slow down your daily expenses.";
-                } else if (probExceed > 40) {
-                    statusBox.className = "mt-6 p-4 rounded-xl flex items-start gap-3 bg-orange-50 text-orange-800 border border-orange-100";
-                    statusIcon.className = "fa-solid fa-bell mt-0.5 text-orange-500";
-                    statusText.innerText = "Moderate risk. Keep an eye on your discretionary spending.";
-                } else {
-                    statusBox.className = "mt-6 p-4 rounded-xl flex items-start gap-3 bg-emerald-50 text-emerald-800 border border-emerald-100";
-                    statusIcon.className = "fa-solid fa-shield mt-0.5 text-emerald-500";
-                    statusText.innerText = "Looking good! You are on track to stay within your budget.";
-                }
+                if (probExceed > 75) { statusBox.className = "mt-6 p-4 rounded-xl flex items-start gap-3 bg-rose-50 text-rose-800 border border-rose-100"; statusIcon.className = "fa-solid fa-triangle-exclamation mt-0.5 text-rose-500"; statusText.innerText = "High risk of overspending! Slow down your daily expenses."; } 
+                else if (probExceed > 40) { statusBox.className = "mt-6 p-4 rounded-xl flex items-start gap-3 bg-orange-50 text-orange-800 border border-orange-100"; statusIcon.className = "fa-solid fa-bell mt-0.5 text-orange-500"; statusText.innerText = "Moderate risk. Keep an eye on your discretionary spending."; } 
+                else { statusBox.className = "mt-6 p-4 rounded-xl flex items-start gap-3 bg-emerald-50 text-emerald-800 border border-emerald-100"; statusIcon.className = "fa-solid fa-shield mt-0.5 text-emerald-500"; statusText.innerText = "Looking good! You are on track to stay within your budget."; }
             }
             
             const marker = document.getElementById('forecast-marker');
-            if (!isHistorical && projectedPct > 0 && projectedPct < 100) {
-                marker.classList.remove('hidden');
-                marker.style.left = `${projectedPct}%`;
-                marker.title = "Projected EOM trajectory";
-            } else {
-                marker.classList.add('hidden');
-            }
+            if (!isHistorical && projectedPct > 0 && projectedPct < 100) { marker.classList.remove('hidden'); marker.style.left = `${projectedPct}%`; marker.title = "Projected EOM trajectory"; } 
+            else marker.classList.add('hidden');
         }
 
         function calculateSummaryCards() {
             const { income, fixedCost, investment } = getMonthBudget(selectedActiveMonth);
             const totalFlexibleBudget = income - fixedCost - investment;
-
-            const monthDiscSpent = expenses
-                .filter(item => item.date && item.date.startsWith(selectedActiveMonth) && !item.isInvestment && !item.isFixed)
-                .reduce((sum, item) => sum + item.amount, 0);
-
-            const monthFixedSpent = expenses
-                .filter(item => item.date && item.date.startsWith(selectedActiveMonth) && item.isFixed)
-                .reduce((sum, item) => sum + item.amount, 0);
-
+            const monthDiscSpent = expenses.filter(item => item.date && item.date.startsWith(selectedActiveMonth) && !item.isInvestment && !item.isFixed).reduce((sum, item) => sum + item.amount, 0);
+            const monthFixedSpent = expenses.filter(item => item.date && item.date.startsWith(selectedActiveMonth) && item.isFixed).reduce((sum, item) => sum + item.amount, 0);
             const freeMoneyRemaining = totalFlexibleBudget - monthDiscSpent;
 
             document.getElementById('card-income').innerText = `₹${income.toLocaleString('en-IN')}`;
@@ -1135,35 +1023,16 @@
             const freeMoneyEl = document.getElementById('card-free');
             freeMoneyEl.innerText = `₹${freeMoneyRemaining.toLocaleString('en-IN')}`;
             
-            if (freeMoneyRemaining < 0) {
-                freeMoneyEl.className = "text-3xl font-extrabold text-rose-400 mb-1 tracking-tight";
-                document.getElementById('card-free-subtitle').innerText = `Overspent by ₹${Math.abs(freeMoneyRemaining).toLocaleString('en-IN')}`;
-            } else {
-                freeMoneyEl.className = "text-3xl font-extrabold text-white mb-1 tracking-tight";
-                document.getElementById('card-free-subtitle').innerText = `Remaining flexible budget`;
-            }
+            if (freeMoneyRemaining < 0) { freeMoneyEl.className = "text-3xl font-extrabold text-rose-400 mb-1 tracking-tight"; document.getElementById('card-free-subtitle').innerText = `Overspent by ₹${Math.abs(freeMoneyRemaining).toLocaleString('en-IN')}`; } 
+            else { freeMoneyEl.className = "text-3xl font-extrabold text-white mb-1 tracking-tight"; document.getElementById('card-free-subtitle').innerText = `Remaining flexible budget`; }
         }
 
         function getBadgeStyle(text, type = 'category') {
             if (type === 'payment') {
-                const map = { 
-                    'UPI': 'bg-purple-50 text-purple-700 border-purple-200', 
-                    'Credit Card': 'bg-blue-50 text-blue-700 border-blue-200', 
-                    'Cash': 'bg-emerald-50 text-emerald-700 border-emerald-200', 
-                    'Bank Transfer': 'bg-indigo-50 text-indigo-700 border-indigo-200' 
-                };
+                const map = { 'UPI': 'bg-purple-50 text-purple-700 border-purple-200', 'Credit Card': 'bg-blue-50 text-blue-700 border-blue-200', 'Cash': 'bg-emerald-50 text-emerald-700 border-emerald-200', 'Bank Transfer': 'bg-indigo-50 text-indigo-700 border-indigo-200' };
                 return map[text] || 'bg-slate-50 text-slate-700 border-slate-200';
             }
-            
-            const palettes = [
-                'bg-orange-50 text-orange-700 border-orange-200', 
-                'bg-teal-50 text-teal-700 border-teal-200', 
-                'bg-pink-50 text-pink-700 border-pink-200', 
-                'bg-amber-50 text-amber-700 border-amber-200', 
-                'bg-cyan-50 text-cyan-700 border-cyan-200', 
-                'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200',
-                'bg-lime-50 text-lime-700 border-lime-200'
-            ];
+            const palettes = [ 'bg-orange-50 text-orange-700 border-orange-200', 'bg-teal-50 text-teal-700 border-teal-200', 'bg-pink-50 text-pink-700 border-pink-200', 'bg-amber-50 text-amber-700 border-amber-200', 'bg-cyan-50 text-cyan-700 border-cyan-200', 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200', 'bg-lime-50 text-lime-700 border-lime-200' ];
             let hash = 0;
             for (let i = 0; i < text.length; i++) hash = text.charCodeAt(i) + ((hash << 5) - hash);
             return palettes[Math.abs(hash) % palettes.length];
@@ -1176,19 +1045,13 @@
             const noExpensesEl = document.getElementById('no-expenses');
 
             const filtered = expenses.filter(item => {
-                const matchesSearch = item.name.toLowerCase().includes(searchQuery) || item.category.toLowerCase().includes(searchQuery);
-                const matchesCategory = categoryFilter === "" || item.category === categoryFilter;
-                const matchesMonth = item.date && item.date.startsWith(selectedActiveMonth);
-                return matchesSearch && matchesCategory && matchesMonth;
+                return (item.name.toLowerCase().includes(searchQuery) || item.category.toLowerCase().includes(searchQuery)) &&
+                       (categoryFilter === "" || item.category === categoryFilter) &&
+                       (item.date && item.date.startsWith(selectedActiveMonth));
             });
 
-            if (filtered.length === 0) {
-                tbody.innerHTML = "";
-                noExpensesEl.classList.remove('hidden');
-                return;
-            } else {
-                noExpensesEl.classList.add('hidden');
-            }
+            if (filtered.length === 0) { tbody.innerHTML = ""; noExpensesEl.classList.remove('hidden'); return; } 
+            else noExpensesEl.classList.add('hidden');
 
             let html = "";
             filtered.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
@@ -1196,7 +1059,6 @@
                 const d = new Date(item.date);
                 const formattedDate = isNaN(d) ? item.date : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
                 const catStyle = getBadgeStyle(item.category, 'category');
-                const payStyle = getBadgeStyle(item.payment, 'payment');
                 
                 let typeBadges = '';
                 if(item.isInvestment) typeBadges += '<div class="w-7 h-7 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100" title="Investment"><i class="fa-solid fa-leaf text-[10px]"></i></div>';
@@ -1212,24 +1074,12 @@
                         </td>
                         <td class="py-4 px-6 border-b border-slate-50 font-extrabold text-slate-900">₹${item.amount.toLocaleString('en-IN')}</td>
                         <td class="py-4 px-6 border-b border-slate-50 text-slate-500 font-medium text-sm hidden md:table-cell">${formattedDate}</td>
-                        <td class="py-4 px-6 border-b border-slate-50">
-                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold border ${catStyle}">
-                                ${escapeHtml(item.category)}
-                            </span>
-                        </td>
-                        <td class="py-4 px-6 border-b border-slate-50">
-                            <div class="flex gap-1.5 justify-center">
-                                ${typeBadges}
-                            </div>
-                        </td>
+                        <td class="py-4 px-6 border-b border-slate-50"><span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold border ${catStyle}">${escapeHtml(item.category)}</span></td>
+                        <td class="py-4 px-6 border-b border-slate-50"><div class="flex gap-1.5 justify-center">${typeBadges}</div></td>
                         <td class="py-4 px-6 border-b border-slate-50 text-right">
                             <div class="flex items-center justify-end gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
-                                <button data-id="${escapeHtml(String(item.id))}" onclick="editExpense(this.dataset.id)" class="w-8 h-8 rounded-full bg-white text-blue-500 border border-blue-100 hover:bg-blue-50 hover:border-blue-200 transition-all inline-flex items-center justify-center shadow-sm cursor-pointer" title="Edit" aria-label="Edit transaction">
-                                    <i class="fa-solid fa-pen text-[11px]"></i>
-                                </button>
-                                <button data-id="${escapeHtml(String(item.id))}" onclick="deleteExpense(this.dataset.id)" class="w-8 h-8 rounded-full bg-white text-slate-400 border border-slate-200 hover:text-rose-600 hover:border-rose-200 hover:bg-rose-50 transition-all inline-flex items-center justify-center shadow-sm cursor-pointer" title="Delete" aria-label="Delete transaction">
-                                    <i class="fa-solid fa-trash-can text-[11px]"></i>
-                                </button>
+                                <button data-id="${escapeHtml(String(item.id))}" onclick="editExpense(this.dataset.id)" class="w-8 h-8 rounded-full bg-white text-blue-500 border border-blue-100 hover:bg-blue-50 hover:border-blue-200 transition-all inline-flex items-center justify-center shadow-sm cursor-pointer" title="Edit"><i class="fa-solid fa-pen text-[11px]"></i></button>
+                                <button data-id="${escapeHtml(String(item.id))}" onclick="deleteExpense(this.dataset.id)" class="w-8 h-8 rounded-full bg-white text-slate-400 border border-slate-200 hover:text-rose-600 hover:border-rose-200 hover:bg-rose-50 transition-all inline-flex items-center justify-center shadow-sm cursor-pointer" title="Delete"><i class="fa-solid fa-trash-can text-[11px]"></i></button>
                             </div>
                         </td>
                     </tr>
@@ -1238,27 +1088,18 @@
             tbody.innerHTML = html;
         }
 
-        function filterExpenses() {
-            renderExpenseTable();
-        }
+        function filterExpenses() { renderExpenseTable(); }
 
         function renderTrendChart() {
             const months = [];
             let [yr, mo] = selectedActiveMonth.split('-').map(Number);
-            
             for(let i=5; i>=0; i--) {
                 let d = new Date(yr, mo - 1 - i, 1);
-                let mStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}`;
-                months.push(mStr);
+                months.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}`);
             }
 
-            const spendData = [];
-            const investData = [];
-            const fixedData = [];
-            const incomeData = [];
-            
-            let totalIncome6Mo = 0;
-            let totalSaved6Mo = 0;
+            const spendData = [], investData = [], fixedData = [], incomeData = [];
+            let totalIncome6Mo = 0, totalSaved6Mo = 0;
 
             months.forEach(m => {
                 const mb = getMonthBudget(m);
@@ -1270,10 +1111,7 @@
                 
                 const finalFixed = loggedFixed > 0 ? loggedFixed : mb.fixedCost; 
                 
-                spendData.push(spent);
-                investData.push(invested);
-                fixedData.push(finalFixed);
-                incomeData.push(mb.income);
+                spendData.push(spent); investData.push(invested); fixedData.push(finalFixed); incomeData.push(mb.income);
 
                 if (mExpenses.length > 0) {
                     totalIncome6Mo += mb.income;
@@ -1282,17 +1120,15 @@
                 }
             });
 
-            const savingsRate = totalIncome6Mo > 0 ? Math.round((totalSaved6Mo / totalIncome6Mo) * 100) : 0;
             const srEl = document.getElementById('avg-savings-rate');
-            if(srEl) srEl.innerText = `${savingsRate}%`;
+            if(srEl) srEl.innerText = `${totalIncome6Mo > 0 ? Math.round((totalSaved6Mo / totalIncome6Mo) * 100) : 0}%`;
 
             const ctxTrend = document.getElementById('trendChart').getContext('2d');
             if (trendChartInstance) trendChartInstance.destroy();
 
             const labels = months.map(m => {
                 const [y, mm] = m.split('-');
-                const d = new Date(y, parseInt(mm)-1, 1);
-                return d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+                return new Date(y, parseInt(mm)-1, 1).toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
             });
 
             trendChartInstance = new Chart(ctxTrend, {
@@ -1300,114 +1136,39 @@
                 data: {
                     labels: labels,
                     datasets: [
-                        {
-                            label: 'Discretionary Spend',
-                            data: spendData,
-                            backgroundColor: '#f43f5e',
-                            borderRadius: 4,
-                            order: 3
-                        },
-                        {
-                            label: 'Fixed Costs',
-                            data: fixedData,
-                            backgroundColor: '#f59e0b',
-                            borderRadius: 4,
-                            order: 2
-                        },
-                        {
-                            label: 'Investments',
-                            data: investData,
-                            backgroundColor: '#3b82f6',
-                            borderRadius: 4,
-                            order: 1
-                        },
-                        {
-                            label: 'Total Monthly Income',
-                            data: incomeData,
-                            type: 'line',
-                            borderColor: '#10b981',
-                            borderWidth: 2,
-                            borderDash: [5, 5],
-                            fill: false,
-                            pointRadius: 4,
-                            pointBackgroundColor: '#fff',
-                            order: 0
-                        }
+                        { label: 'Discretionary Spend', data: spendData, backgroundColor: '#f43f5e', borderRadius: 4, order: 3 },
+                        { label: 'Fixed Costs', data: fixedData, backgroundColor: '#f59e0b', borderRadius: 4, order: 2 },
+                        { label: 'Investments', data: investData, backgroundColor: '#3b82f6', borderRadius: 4, order: 1 },
+                        { label: 'Total Monthly Income', data: incomeData, type: 'line', borderColor: '#10b981', borderWidth: 2, borderDash: [5, 5], fill: false, pointRadius: 4, pointBackgroundColor: '#fff', order: 0 }
                     ]
                 },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: { mode: 'index', intersect: false },
-                    scales: {
-                        y: { 
-                            beginAtZero: true, 
-                            stacked: true,
-                            grid: { color: '#f1f5f9' },
-                            ticks: { callback: function(value) { return '₹' + value.toLocaleString('en-IN'); } }
-                        },
-                        x: { 
-                            stacked: true,
-                            grid: { display: false }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: { font: { size: 11, weight: 'bold' }, usePointStyle: true, pointStyle: 'rectRounded' }
-                        },
-                        tooltip: {
-                            backgroundColor: '#0f172a',
-                            titleFont: { size: 12, weight: 'bold' },
-                            bodyFont: { size: 13, weight: 'bold' },
-                            padding: 12,
-                            cornerRadius: 12,
-                            callbacks: {
-                                label: function(context) {
-                                    return context.dataset.label + ': ₹' + context.parsed.y.toLocaleString('en-IN');
-                                }
-                            }
-                        }
-                    }
+                    responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+                    scales: { y: { beginAtZero: true, stacked: true, grid: { color: '#f1f5f9' }, ticks: { callback: function(value) { return '₹' + value.toLocaleString('en-IN'); } } }, x: { stacked: true, grid: { display: false } } },
+                    plugins: { legend: { position: 'bottom', labels: { font: { size: 11, weight: 'bold' }, usePointStyle: true, pointStyle: 'rectRounded' } }, tooltip: { backgroundColor: '#0f172a', titleFont: { size: 12, weight: 'bold' }, bodyFont: { size: 13, weight: 'bold' }, padding: 12, cornerRadius: 12, callbacks: { label: function(context) { return context.dataset.label + ': ₹' + context.parsed.y.toLocaleString('en-IN'); } } } }
                 }
             });
         }
 
         function setChartView(mode) {
             chartViewMode = mode;
-            
-            const btnDisc = document.getElementById('btn-view-disc');
-            const btnFixed = document.getElementById('btn-view-fixed');
-            
-            if (mode === 'discretionary') {
-                btnDisc.className = 'px-4 py-1.5 rounded-md text-xs font-bold bg-slate-800 text-white shadow-sm transition-all cursor-pointer';
-                btnFixed.className = 'px-4 py-1.5 rounded-md text-xs font-bold text-slate-600 hover:bg-slate-200 transition-all cursor-pointer';
-            } else {
-                btnFixed.className = 'px-4 py-1.5 rounded-md text-xs font-bold bg-slate-800 text-white shadow-sm transition-all cursor-pointer';
-                btnDisc.className = 'px-4 py-1.5 rounded-md text-xs font-bold text-slate-600 hover:bg-slate-200 transition-all cursor-pointer';
-            }
-            
+            const btnDisc = document.getElementById('btn-view-disc'), btnFixed = document.getElementById('btn-view-fixed');
+            if (mode === 'discretionary') { btnDisc.className = 'px-4 py-1.5 rounded-md text-xs font-bold bg-slate-800 text-white shadow-sm transition-all cursor-pointer'; btnFixed.className = 'px-4 py-1.5 rounded-md text-xs font-bold text-slate-600 hover:bg-slate-200 transition-all cursor-pointer'; } 
+            else { btnFixed.className = 'px-4 py-1.5 rounded-md text-xs font-bold bg-slate-800 text-white shadow-sm transition-all cursor-pointer'; btnDisc.className = 'px-4 py-1.5 rounded-md text-xs font-bold text-slate-600 hover:bg-slate-200 transition-all cursor-pointer'; }
             renderCharts();
         }
 
         function renderCharts() {
-            Chart.defaults.font.family = "'Inter', sans-serif";
-            Chart.defaults.color = '#64748b';
-
+            Chart.defaults.font.family = "'Inter', sans-serif"; Chart.defaults.color = '#64748b';
             const catMap = {};
             expenses.forEach(item => {
                 if (item.date && item.date.startsWith(selectedActiveMonth) && !item.isInvestment) {
-                    if (chartViewMode === 'discretionary' && !item.isFixed) {
-                        catMap[item.category] = (catMap[item.category] || 0) + item.amount;
-                    } else if (chartViewMode === 'fixed' && item.isFixed) {
-                        catMap[item.category] = (catMap[item.category] || 0) + item.amount;
-                    }
+                    if (chartViewMode === 'discretionary' && !item.isFixed) catMap[item.category] = (catMap[item.category] || 0) + item.amount;
+                    else if (chartViewMode === 'fixed' && item.isFixed) catMap[item.category] = (catMap[item.category] || 0) + item.amount;
                 }
             });
 
-            const catLabels = Object.keys(catMap);
-            const catValues = Object.values(catMap);
-
+            const catLabels = Object.keys(catMap), catValues = Object.values(catMap);
             const ctxCat = document.getElementById('categoryChart').getContext('2d');
             if (categoryChartInstance) categoryChartInstance.destroy();
 
@@ -1415,99 +1176,34 @@
                 type: 'doughnut',
                 data: {
                     labels: catLabels.length ? catLabels : ['No Data Logged for View'],
-                    datasets: [{
-                        data: catValues.length ? catValues : [1],
-                        backgroundColor: catValues.length ? [
-                            '#10b981', '#3b82f6', '#f59e0b', '#ec4899', '#8b5cf6', '#14b8a6', '#f43f5e', '#0ea5e9', '#84cc16'
-                        ] : ['#f1f5f9'], 
-                        borderWidth: 3,
-                        borderColor: '#ffffff',
-                        hoverOffset: 8
-                    }]
+                    datasets: [{ data: catValues.length ? catValues : [1], backgroundColor: catValues.length ? ['#10b981', '#3b82f6', '#f59e0b', '#ec4899', '#8b5cf6', '#14b8a6', '#f43f5e', '#0ea5e9', '#84cc16'] : ['#f1f5f9'], borderWidth: 3, borderColor: '#ffffff', hoverOffset: 8 }]
                 },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    animation: { animateScale: true, animateRotate: true, duration: 1500, easing: 'easeOutCirc' },
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: { 
-                                font: { size: 12, weight: 'bold' }, 
-                                color: '#475569', 
-                                usePointStyle: true, 
-                                pointStyle: 'circle', 
-                                padding: 20 
-                            }
-                        },
-                        tooltip: {
-                            backgroundColor: '#0f172a',
-                            titleFont: { size: 11, weight: 'bold' },
-                            bodyFont: { size: 14, weight: 'bold' },
-                            padding: 12,
-                            cornerRadius: 12,
-                            callbacks: {
-                                label: function(context) { 
-                                    if(!catValues.length) return ' No data';
-                                    return ' ₹ ' + context.parsed.toLocaleString('en-IN'); 
-                                }
-                            }
-                        }
-                    },
-                    cutout: '75%',
-                    layout: { padding: 10 }
+                    responsive: true, maintainAspectRatio: false, animation: { animateScale: true, animateRotate: true, duration: 1500, easing: 'easeOutCirc' },
+                    plugins: { legend: { position: 'bottom', labels: { font: { size: 12, weight: 'bold' }, color: '#475569', usePointStyle: true, pointStyle: 'circle', padding: 20 } }, tooltip: { backgroundColor: '#0f172a', titleFont: { size: 11, weight: 'bold' }, bodyFont: { size: 14, weight: 'bold' }, padding: 12, cornerRadius: 12, callbacks: { label: function(context) { if(!catValues.length) return ' No data'; return ' ₹ ' + context.parsed.toLocaleString('en-IN'); } } } }, cutout: '75%', layout: { padding: 10 }
                 }
             });
         }
 
         function exportDataJSON() {
             if (expenses.length === 0) return showToast("No data to backup yet.", "info");
-            
-            const payload = {
-                version: "1.0",
-                exportDate: new Date().toISOString(),
-                settings: appSettings,
-                expenses: expenses
-            };
-
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(payload, null, 2));
-            const downloadAnchorNode = document.createElement('a');
-            downloadAnchorNode.setAttribute("href", dataStr);
-            downloadAnchorNode.setAttribute("download", `Finance_Backup_${new Date().toISOString().split('T')[0]}.json`);
-            document.body.appendChild(downloadAnchorNode);
-            downloadAnchorNode.click();
-            downloadAnchorNode.remove();
-            
-            localStorage.setItem('finance_tracker_lastbackup', Date.now());
-            showToast("Backup downloaded successfully.", "success");
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ version: "1.0", exportDate: new Date().toISOString(), settings: appSettings, expenses: expenses }, null, 2));
+            const downloadAnchorNode = document.createElement('a'); downloadAnchorNode.setAttribute("href", dataStr); downloadAnchorNode.setAttribute("download", `Finance_Backup_${new Date().toISOString().split('T')[0]}.json`);
+            document.body.appendChild(downloadAnchorNode); downloadAnchorNode.click(); downloadAnchorNode.remove();
+            localStorage.setItem('finance_tracker_lastbackup', Date.now()); showToast("Backup downloaded successfully.", "success");
         }
 
         function importDataJSON(event) {
             const file = event.target.files[0];
             if (!file) return;
-
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
-                    const importedData = JSON.parse(e.target.result);
-                    const clean = sanitizeImport(importedData);
+                    const clean = sanitizeImport(JSON.parse(e.target.result));
                     if (clean && !confirm('Restore will replace ALL current data in this browser. Continue?')) { event.target.value = ''; return; }
-                    if (clean) {
-                        appSettings = clean.settings;
-                        expenses = clean.expenses;
-                        
-                        saveSettings();
-                        saveExpenses();
-                        
-                        initApp(); 
-                        closeSettingsModal();
-                        showToast("Data restored successfully!", "success");
-                    } else {
-                        showToast("Invalid backup file structure.", "error");
-                    }
-                } catch (error) {
-                    showToast("Failed to parse the backup file.", "error");
-                }
+                    if (clean) { appSettings = clean.settings; expenses = clean.expenses; saveSettings(); saveExpenses(); initApp(); closeSettingsModal(); showToast("Data restored successfully!", "success"); } 
+                    else showToast("Invalid backup file structure.", "error");
+                } catch (error) { showToast("Failed to parse the backup file.", "error"); }
                 event.target.value = ''; 
             };
             reader.readAsText(file);
@@ -1515,47 +1211,17 @@
 
         function exportDataCSV() {
             if (expenses.length === 0) return showToast("No transactions to export.", "info");
-            
             let csvContent = "ID,Name,Amount,Date,Category,Payment Method,Investment,Fixed Cost,Recurring\n";
-            
-            expenses.forEach(row => {
-                const cleanName = `"${row.name.replace(/"/g, '""')}"`;
-                const rowArray = [
-                    row.id,
-                    cleanName,
-                    row.amount,
-                    row.date,
-                    row.category,
-                    row.payment,
-                    row.isInvestment ? "Yes" : "No",
-                    row.isFixed ? "Yes" : "No",
-                    row.isRecurring ? "Yes" : "No"
-                ];
-                csvContent += rowArray.join(",") + "\n";
-            });
-
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a");
-            const url = URL.createObjectURL(blob);
-            
-            link.setAttribute("href", url);
-            link.setAttribute("download", `Finance_Export_${new Date().toISOString().split('T')[0]}.csv`);
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            showToast("CSV exported successfully.", "success");
+            expenses.forEach(row => { csvContent += [row.id, `"${row.name.replace(/"/g, '""')}"`, row.amount, row.date, row.category, row.payment, row.isInvestment ? "Yes" : "No", row.isFixed ? "Yes" : "No", row.isRecurring ? "Yes" : "No"].join(",") + "\n"; });
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }); const link = document.createElement("a");
+            link.setAttribute("href", URL.createObjectURL(blob)); link.setAttribute("download", `Finance_Export_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link); link.click(); document.body.removeChild(link); showToast("CSV exported successfully.", "success");
         }
 
         window.onload = () => { initApp(); postInit(); };
     </script>
     <script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('sw.js');
-    });
-  }
-</script>
+      if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js'); }); }
+    </script>
 </body>
 </html>
