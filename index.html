@@ -526,7 +526,6 @@
         function addSkip(k) { const a = loadSkips(); if (!a.includes(k)) { a.push(k); localStorage.setItem('finance_tracker_skips', JSON.stringify(a)); } }
         function removeSkip(k) { localStorage.setItem('finance_tracker_skips', JSON.stringify(loadSkips().filter(x => x !== k))); }
         
-        // Smart Waterfall Budget: Inherit from previous month if not set
         function getMonthBudget(ym) { 
             if (appSettings.monthlyData && appSettings.monthlyData[ym]) return appSettings.monthlyData[ym];
             const sorted = Object.keys(appSettings.monthlyData || {}).sort().reverse();
@@ -774,13 +773,8 @@
                 }
             });
             
-            if (count > 0) {
-                closeImportModal();
-                afterDataChange();
-                showToast(`${count} transactions imported & categorized.`, 'success');
-            } else {
-                showToast('No valid new transactions found.', 'info');
-            }
+            if (count > 0) { closeImportModal(); afterDataChange(); showToast(`${count} transactions imported & categorized.`, 'success'); } 
+            else showToast('No valid new transactions found.', 'info');
         }
 
         function editExpense(id) {
@@ -825,13 +819,19 @@
             }
             if (!document.querySelector(`#active-month-select option[value="${date.substring(0,7)}"]`)) populateMonthDropdown();
             if(selectedActiveMonth !== date.substring(0,7)) { selectedActiveMonth = date.substring(0,7); document.getElementById('active-month-select').value = selectedActiveMonth; }
-            afterDataChange();
-            closeModal();
+            afterDataChange(); closeModal();
         }
 
         function openSettingsModal() {
             const selectEl = document.getElementById('active-month-select');
-            document.getElementById('settings-month-label').innerText = `Editing targets for ${selectEl.options[selectEl.selectedIndex].text}`;
+            
+            // Fail-safe: Handle edge case where dropdown options haven't rendered yet
+            const monthText = selectEl.options.length > 0 && selectEl.selectedIndex >= 0 
+                ? selectEl.options[selectEl.selectedIndex].text 
+                : selectedActiveMonth;
+                
+            const labelEl = document.getElementById('settings-month-label');
+            if(labelEl) labelEl.innerText = `Editing targets for ${monthText}`;
             
             const mb = getMonthBudget(selectedActiveMonth);
             document.getElementById('set-income').value = mb.income || '';
@@ -897,6 +897,7 @@
 
         function renderCategoriesList() {
             const listEl = document.getElementById('settings-categories-list');
+            if(!listEl) return;
             listEl.innerHTML = '';
             appSettings.categories.forEach(cat => {
                 listEl.innerHTML += `
@@ -1078,8 +1079,8 @@
                         <td class="py-4 px-6 border-b border-slate-50"><div class="flex gap-1.5 justify-center">${typeBadges}</div></td>
                         <td class="py-4 px-6 border-b border-slate-50 text-right">
                             <div class="flex items-center justify-end gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
-                                <button data-id="${escapeHtml(String(item.id))}" onclick="editExpense(this.dataset.id)" class="w-8 h-8 rounded-full bg-white text-blue-500 border border-blue-100 hover:bg-blue-50 hover:border-blue-200 transition-all inline-flex items-center justify-center shadow-sm cursor-pointer" title="Edit"><i class="fa-solid fa-pen text-[11px]"></i></button>
-                                <button data-id="${escapeHtml(String(item.id))}" onclick="deleteExpense(this.dataset.id)" class="w-8 h-8 rounded-full bg-white text-slate-400 border border-slate-200 hover:text-rose-600 hover:border-rose-200 hover:bg-rose-50 transition-all inline-flex items-center justify-center shadow-sm cursor-pointer" title="Delete"><i class="fa-solid fa-trash-can text-[11px]"></i></button>
+                                <button data-id="${escapeHtml(String(item.id))}" onclick="editExpense(this.dataset.id)" class="w-8 h-8 rounded-full bg-white text-blue-500 border border-blue-100 hover:bg-blue-50 hover:border-blue-200 transition-all inline-flex items-center justify-center shadow-sm cursor-pointer" title="Edit" aria-label="Edit transaction"><i class="fa-solid fa-pen text-[11px]"></i></button>
+                                <button data-id="${escapeHtml(String(item.id))}" onclick="deleteExpense(this.dataset.id)" class="w-8 h-8 rounded-full bg-white text-slate-400 border border-slate-200 hover:text-rose-600 hover:border-rose-200 hover:bg-rose-50 transition-all inline-flex items-center justify-center shadow-sm cursor-pointer" title="Delete" aria-label="Delete transaction"><i class="fa-solid fa-trash-can text-[11px]"></i></button>
                             </div>
                         </td>
                     </tr>
