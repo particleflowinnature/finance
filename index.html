@@ -554,7 +554,7 @@
             const ex = [];
             for (const e of d.expenses) {
                 if (!e || typeof e.name !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(e.date || '') || !Number.isFinite(Number(e.amount))) return null;
-                ex.push({ id: String(e.id || newId()), name: e.name.slice(0, 100), amount: Number(e.amount), date: e.date, category: String(e.category || 'Other').slice(0, 50), payment: String(e.payment || 'UPI'), isInvestment: !!e.isInvestment, isFixed: !!e.isFixed, isRecurring: !!e.isRecurring });
+                ex.push({ type: ['refund', 'income'].includes(e.type) ? e.type : 'expense', note: String(e.note || '').slice(0, 120), tags: Array.isArray(e.tags) ? e.tags.slice(0, 8).map(String) : [], id: String(e.id || newId()), name: e.name.slice(0, 100), amount: Number(e.amount), date: e.date, category: String(e.category || 'Other').slice(0, 50), payment: String(e.payment || 'UPI'), isInvestment: !!e.isInvestment, isFixed: !!e.isFixed, isRecurring: !!e.isRecurring });
             }
             const cats = Array.isArray(d.settings.categories) ? d.settings.categories.filter(c => typeof c === 'string' && c.trim()).map(c => c.slice(0, 50)) : [];
             const mData = d.settings.monthlyData || {};
@@ -959,14 +959,14 @@
         function calculateWealth() {
             const totalWealth = expenses.filter(item => item.isInvestment).reduce((sum, item) => sum + item.amount, 0);
             const wealthEl = document.getElementById('all-time-wealth');
-            if (wealthEl) wealthEl.innerText = `₹${totalWealth.toLocaleString('en-IN')}`;
+            if (wealthEl) setMoney('all-time-wealth', totalWealth);
         }
 
         function calculateForecast() {
-            const { income, fixedCost, investment } = getMonthBudget(selectedActiveMonth);
+            const { fixedCost, investment } = getMonthBudget(selectedActiveMonth); const income = monthIncome(selectedActiveMonth);
             const totalFlexibleBudget = income - fixedCost - investment;
             
-            const monthDiscSpent = expenses.filter(item => item.date && item.date.startsWith(selectedActiveMonth) && !item.isInvestment && !item.isFixed).reduce((sum, item) => sum + item.amount, 0);
+            const monthDiscSpent = expenses.filter(item => item.date && item.date.startsWith(selectedActiveMonth) && !item.isInvestment && !item.isFixed && item.type !== 'income').reduce((sum, item) => sum + item.amount, 0);
 
             const [year, month] = selectedActiveMonth.split('-').map(Number);
             const now = new Date();
@@ -1027,18 +1027,18 @@
         }
 
         function calculateSummaryCards() {
-            const { income, fixedCost, investment } = getMonthBudget(selectedActiveMonth);
+            const { fixedCost, investment } = getMonthBudget(selectedActiveMonth); const income = monthIncome(selectedActiveMonth);
             const totalFlexibleBudget = income - fixedCost - investment;
-            const monthDiscSpent = expenses.filter(item => item.date && item.date.startsWith(selectedActiveMonth) && !item.isInvestment && !item.isFixed).reduce((sum, item) => sum + item.amount, 0);
+            const monthDiscSpent = expenses.filter(item => item.date && item.date.startsWith(selectedActiveMonth) && !item.isInvestment && !item.isFixed && item.type !== 'income').reduce((sum, item) => sum + item.amount, 0);
             const monthFixedSpent = expenses.filter(item => item.date && item.date.startsWith(selectedActiveMonth) && item.isFixed).reduce((sum, item) => sum + item.amount, 0);
             const freeMoneyRemaining = totalFlexibleBudget - monthDiscSpent;
 
-            document.getElementById('card-income').innerText = `₹${income.toLocaleString('en-IN')}`;
-            document.getElementById('card-fixed').innerText = `₹${monthFixedSpent.toLocaleString('en-IN')} / ₹${fixedCost.toLocaleString('en-IN')}`;
-            document.getElementById('card-sip').innerText = `₹${investment.toLocaleString('en-IN')}`;
+            setMoney('card-income', income);
+            document.getElementById('card-fixed').innerText = `${compactINR(monthFixedSpent)} / ${compactINR(fixedCost)}`;
+            setMoney('card-sip', investment);
             
             const freeMoneyEl = document.getElementById('card-free');
-            freeMoneyEl.innerText = `₹${freeMoneyRemaining.toLocaleString('en-IN')}`;
+            setMoney('card-free', freeMoneyRemaining);
             
             if (freeMoneyRemaining < 0) { freeMoneyEl.className = "text-3xl font-extrabold text-rose-400 mb-1 tracking-tight"; document.getElementById('card-free-subtitle').innerText = `Overspent by ₹${Math.abs(freeMoneyRemaining).toLocaleString('en-IN')}`; } 
             else { freeMoneyEl.className = "text-3xl font-extrabold text-white mb-1 tracking-tight"; document.getElementById('card-free-subtitle').innerText = `Remaining flexible budget`; }
@@ -1062,17 +1062,18 @@
             const noExpensesEl = document.getElementById('no-expenses');
 
             const filtered = expenses.filter(item => {
-                return (item.name.toLowerCase().includes(searchQuery) || item.category.toLowerCase().includes(searchQuery)) &&
+                return ((item.name + ' ' + item.category + ' ' + (item.note || '') + ' ' + (item.tags || []).join(' ')).toLowerCase().includes(searchQuery)) &&
                        (categoryFilter === "" || item.category === categoryFilter) &&
-                       (item.date && item.date.startsWith(selectedActiveMonth));
+                       inScope(item);
             });
 
-            if (filtered.length === 0) { tbody.innerHTML = ""; noExpensesEl.classList.remove('hidden'); return; } 
+            if (filtered.length === 0) { updatePager(0, 1); tbody.innerHTML = ""; noExpensesEl.classList.remove('hidden'); return; } 
             else noExpensesEl.classList.add('hidden');
 
             let html = "";
             filtered.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
-            filtered.forEach(item => {
+            const pages = Math.max(1, Math.ceil(filtered.length / 25)); if (FV.page > pages) FV.page = pages; updatePager(filtered.length, pages);
+            filtered.slice((FV.page - 1) * 25, FV.page * 25).forEach(item => {
                 const d = new Date(item.date);
                 const formattedDate = isNaN(d) ? item.date : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
                 const catStyle = getBadgeStyle(item.category, 'category');
@@ -1086,10 +1087,10 @@
                 html += `
                     <tr class="hover:bg-slate-50/80 transition-colors group">
                         <td class="py-4 px-6 border-b border-slate-50">
-                            <div class="font-bold text-slate-800">${escapeHtml(item.name)}</div>
+                            <div class="font-bold text-slate-800">${escapeHtml(item.name)}${typeBadge(item)}</div>${noteTags(item)}
                             <div class="text-[11px] font-semibold text-slate-400 mt-1 uppercase tracking-wider">${formattedDate} • ${isNaN(d) ? '' : getWeekNumber(d)}</div>
                         </td>
-                        <td class="py-4 px-6 border-b border-slate-50 font-extrabold text-slate-900">₹${item.amount.toLocaleString('en-IN')}</td>
+                        <td class="py-4 px-6 border-b border-slate-50 font-extrabold text-slate-900">${item.type === 'income' ? '+' : ''}${rupee(item.amount)}</td>
                         <td class="py-4 px-6 border-b border-slate-50 text-slate-500 font-medium text-sm hidden md:table-cell">${formattedDate}</td>
                         <td class="py-4 px-6 border-b border-slate-50"><span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold border ${catStyle}">${escapeHtml(item.category)}</span></td>
                         <td class="py-4 px-6 border-b border-slate-50"><div class="flex gap-1.5 justify-center">${typeBadges}</div></td>
@@ -1105,7 +1106,7 @@
             tbody.innerHTML = html;
         }
 
-        function filterExpenses() { renderExpenseTable(); }
+        function filterExpenses() { FV.page = 1; renderExpenseTable(); }
 
         function renderTrendChart() {
             const months = [];
@@ -1122,7 +1123,7 @@
                 const mb = getMonthBudget(m);
                 const mExpenses = expenses.filter(e => e.date && e.date.startsWith(m));
                 
-                const spent = mExpenses.filter(e => !e.isInvestment && !e.isFixed).reduce((s, e) => s + e.amount, 0);
+                const spent = mExpenses.filter(e => !e.isInvestment && !e.isFixed && e.type !== 'income').reduce((s, e) => s + e.amount, 0);
                 const invested = mExpenses.filter(e => e.isInvestment).reduce((s, e) => s + e.amount, 0);
                 const loggedFixed = mExpenses.filter(e => e.isFixed).reduce((s, e) => s + e.amount, 0);
                 
@@ -1179,7 +1180,7 @@
             Chart.defaults.font.family = "'Inter', sans-serif"; Chart.defaults.color = '#64748b';
             const catMap = {};
             expenses.forEach(item => {
-                if (item.date && item.date.startsWith(selectedActiveMonth) && !item.isInvestment) {
+                if (item.date && item.date.startsWith(selectedActiveMonth) && !item.isInvestment && item.type !== 'income') {
                     if (chartViewMode === 'discretionary' && !item.isFixed) catMap[item.category] = (catMap[item.category] || 0) + item.amount;
                     else if (chartViewMode === 'fixed' && item.isFixed) catMap[item.category] = (catMap[item.category] || 0) + item.amount;
                 }
@@ -1235,7 +1236,92 @@
             document.body.appendChild(link); link.click(); document.body.removeChild(link); showToast("CSV exported successfully.", "success");
         }
 
-        window.onload = () => { initApp(); postInit(); };
+        // ===== Extras: types, notes/tags, quick logging, filters, compact numbers =====
+        const FV = { scope: 'month', from: '', to: '', page: 1 };
+        function compactINR(n) { const a = Math.abs(n), sg = n < 0 ? '-' : ''; const t = v => v.toFixed(2).replace(/\.?0+$/, ''); if (a >= 1e7) return sg + '₹' + t(a / 1e7) + 'Cr'; if (a >= 1e5) return sg + '₹' + t(a / 1e5) + 'L'; return sg + '₹' + a.toLocaleString('en-IN'); }
+        function setMoney(id, n) { const el = document.getElementById(id); el.innerText = compactINR(n); el.title = '₹' + n.toLocaleString('en-IN'); }
+        function rupee(n) { return (n < 0 ? '−₹' : '₹') + Math.abs(n).toLocaleString('en-IN'); }
+        function monthIncome(ym) { return getMonthBudget(ym).income + expenses.filter(e => e.type === 'income' && e.date && e.date.startsWith(ym)).reduce((t, e) => t + e.amount, 0); }
+        function inScope(i) { if (!i.date) return false; if (!FV.from && !FV.to && FV.scope === 'month' && !i.date.startsWith(selectedActiveMonth)) return false; return (!FV.from || i.date >= FV.from) && (!FV.to || i.date <= FV.to); }
+        function typeBadge(i) { return i.type === 'refund' ? ' <span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 align-middle">REFUND</span>' : i.type === 'income' ? ' <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 align-middle">INCOME</span>' : ''; }
+        function noteTags(i) { return (i.note ? '<div class="text-xs text-slate-500 mt-0.5">' + escapeHtml(i.note) + '</div>' : '') + ((i.tags || []).length ? '<div class="mt-1 flex flex-wrap gap-1">' + i.tags.map(t => '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">#' + escapeHtml(t) + '</span>').join('') + '</div>' : ''); }
+        function updatePager(n, pages) { const p = document.getElementById('pager'); if (!p) return; p.classList.toggle('hidden', n <= 25); p.querySelector('span').textContent = 'Page ' + FV.page + ' of ' + pages + ' · ' + n + ' entries'; p.querySelector('[data-d="-1"]').disabled = FV.page <= 1; p.querySelector('[data-d="1"]').disabled = FV.page >= pages; }
+        function loadTpl() { try { return JSON.parse(localStorage.getItem('finance_templates') || '[]'); } catch (e) { return []; } }
+        function renderTpl() {
+            const r = document.getElementById('tpl-row'); const t = loadTpl(); r.innerHTML = '';
+            t.forEach((x, i) => {
+                const b = document.createElement('span'); b.className = 'inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-xs font-bold text-emerald-700';
+                const a = document.createElement('button'); a.type = 'button'; a.textContent = x.name + ' ₹' + x.amount;
+                a.onclick = () => { document.getElementById('exp-name').value = x.name; document.getElementById('exp-amount').value = x.amount; const c = document.getElementById('exp-category'); if ([...c.options].some(o => o.value === x.category)) c.value = x.category; const rd = document.querySelector(`input[name="payment-method"][value="${x.payment}"]`); if (rd) rd.checked = true; };
+                const d = document.createElement('button'); d.type = 'button'; d.textContent = '×'; d.setAttribute('aria-label', 'Remove template');
+                d.onclick = () => { t.splice(i, 1); localStorage.setItem('finance_templates', JSON.stringify(t)); renderTpl(); };
+                b.append(a, d); r.appendChild(b);
+            });
+        }
+        function saveTemplate() {
+            const name = document.getElementById('exp-name').value.trim(), amount = parseFloat(document.getElementById('exp-amount').value);
+            if (!name || !(amount > 0)) return showToast('Enter a name and amount first.', 'info');
+            const pay = document.querySelector('input[name="payment-method"]:checked'); const t = loadTpl();
+            t.push({ name: name.slice(0, 30), amount, category: document.getElementById('exp-category').value, payment: pay ? pay.value : 'UPI' });
+            localStorage.setItem('finance_templates', JSON.stringify(t.slice(-12))); renderTpl(); showToast('Template saved.', 'success');
+        }
+        const _open = openModal;
+        openModal = function (isEdit = false) {
+            _open(isEdit);
+            if (!isEdit) {
+                const $ = id => document.getElementById(id);
+                try { const l = JSON.parse(localStorage.getItem('finance_last') || 'null'); if (l) { const c = $('exp-category'); if ([...c.options].some(o => o.value === l.category)) c.value = l.category; const r = document.querySelector(`input[name="payment-method"][value="${l.payment}"]`); if (r) r.checked = true; } } catch (e) {}
+                $('exp-type').value = 'expense'; $('exp-note').value = ''; $('exp-tags').value = '';
+            }
+            renderTpl();
+        };
+        const _edit = editExpense;
+        editExpense = function (id) {
+            _edit(id); const e = expenses.find(x => x.id === id); if (!e) return;
+            document.getElementById('exp-type').value = e.type || 'expense'; document.getElementById('exp-note').value = e.note || ''; document.getElementById('exp-tags').value = (e.tags || []).join(', ');
+            if (e.type === 'refund') document.getElementById('exp-amount').value = Math.abs(e.amount);
+        };
+        const _sub = handleFormSubmit;
+        handleFormSubmit = function (ev) {
+            ev.preventDefault(); const $ = id => document.getElementById(id);
+            const type = $('exp-type').value, note = $('exp-note').value.trim().slice(0, 120);
+            const tags = $('exp-tags').value.split(',').map(t => t.trim().toLowerCase()).filter(Boolean).slice(0, 8);
+            const a = parseFloat($('exp-amount').value); if (type === 'refund' && a > 0) $('exp-amount').value = -a;
+            const pay = document.querySelector('input[name="payment-method"]:checked');
+            try { localStorage.setItem('finance_last', JSON.stringify({ category: $('exp-category').value, payment: pay ? pay.value : 'UPI' })); } catch (e) {}
+            const ids = new Set(expenses.map(x => x.id)); const eid = isEditMode ? editingExpenseId : null;
+            _sub(ev);
+            const t = eid ? expenses.find(x => x.id === eid) : expenses.find(x => !ids.has(x.id));
+            if (t) { t.type = type; t.note = note; t.tags = tags; afterDataChange(); }
+        };
+        function initExtras() {
+            const $ = id => document.getElementById(id);
+            const cls = 'w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500';
+            const lb = 'block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2';
+            const pay = $('payment-chips').parentElement; const box = document.createElement('div'); box.className = 'grid grid-cols-1 sm:grid-cols-3 gap-4';
+            box.innerHTML = `<div><label for="exp-type" class="${lb}">Type</label><select id="exp-type" class="${cls}"><option value="expense">Expense</option><option value="refund">Refund</option><option value="income">Extra income</option></select></div><div><label for="exp-note" class="${lb}">Note</label><input id="exp-note" maxlength="120" placeholder="optional" class="${cls}"></div><div><label for="exp-tags" class="${lb}">Tags</label><input id="exp-tags" placeholder="trip, reimbursable" class="${cls}"></div>`;
+            pay.parentElement.insertBefore(box, pay);
+            const q = document.createElement('div'); q.id = 'tpl-row'; q.className = 'flex flex-wrap gap-2'; $('expense-form').prepend(q);
+            const sb = document.createElement('button'); sb.type = 'button'; sb.textContent = 'Save as template'; sb.className = 'px-4 py-3 rounded-xl text-emerald-700 text-sm font-bold hover:bg-emerald-50 transition-all'; sb.onclick = saveTemplate;
+            $('expense-form').querySelector('button[type="submit"]').before(sb);
+            const row = $('category-filter').closest('.flex-wrap') || $('category-filter').parentElement.parentElement; const tb = document.createElement('div'); tb.className = 'flex flex-wrap items-center gap-2';
+            const c2 = 'px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 shadow-sm';
+            tb.innerHTML = `<select id="scope-select" aria-label="Search scope" class="${c2}"><option value="month">This month</option><option value="all">All months</option></select><input type="date" id="date-from" aria-label="From date" class="${c2}"><input type="date" id="date-to" aria-label="To date" class="${c2}">`;
+            row.appendChild(tb);
+            ['scope-select', 'date-from', 'date-to'].forEach(id => $(id).onchange = () => { FV.scope = $('scope-select').value; FV.from = $('date-from').value; FV.to = $('date-to').value; FV.page = 1; renderExpenseTable(); });
+            const pg = document.createElement('div'); pg.id = 'pager'; pg.className = 'hidden flex items-center justify-center gap-4 py-4 border-t border-slate-100 text-sm font-semibold text-slate-600 bg-white';
+            pg.innerHTML = '<button type="button" data-d="-1" class="px-4 py-2 rounded-lg bg-slate-100 disabled:opacity-40">Prev</button><span></span><button type="button" data-d="1" class="px-4 py-2 rounded-lg bg-slate-100 disabled:opacity-40">Next</button>';
+            pg.querySelectorAll('button').forEach(b => b.onclick = () => { FV.page += parseInt(b.dataset.d); renderExpenseTable(); });
+            $('no-expenses').after(pg);
+            document.addEventListener('keydown', e => {
+                if (['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName) || e.ctrlKey || e.metaKey || e.altKey) return;
+                if (['expense-modal', 'settings-modal'].some(id => !$(id).classList.contains('hidden'))) return;
+                if (e.key === 'n') { e.preventDefault(); openModal(); } else if (e.key === '/') { e.preventDefault(); $('search-input').focus(); }
+            });
+            renderAll();
+        }
+
+        window.onload = () => { initApp(); postInit(); initExtras(); };
     </script>
     <script>
       if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js'); }); }
