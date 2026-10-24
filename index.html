@@ -522,6 +522,18 @@
         function escapeHtml(str) {
             return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const toast = document.createElement('div');
+            const icon = type === 'success' ? '<i class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>' : (type === 'error' ? '<i class="fa-solid fa-circle-exclamation text-rose-400 text-lg"></i>' : '<i class="fa-solid fa-circle-info text-blue-400 text-lg"></i>');
+            toast.className = 'bg-slate-900 text-white px-5 py-3.5 rounded-2xl shadow-2xl shadow-slate-900/20 text-sm font-bold flex items-center gap-3 transform translate-y-10 opacity-0 transition-all duration-500 ease-out z-50 border border-slate-700 pointer-events-auto';
+            toast.innerHTML = icon + ' <span></span>';
+            toast.lastChild.textContent = message;
+            container.appendChild(toast);
+            requestAnimationFrame(() => requestAnimationFrame(() => toast.classList.remove('translate-y-10', 'opacity-0')));
+            setTimeout(() => { toast.classList.add('translate-y-10', 'opacity-0'); setTimeout(() => toast.remove(), 500); }, 3500);
+        }
         function localISO(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
         function freshSettings() { return { categories: [...defaultSettings.categories], monthlyData: {}, autoRules: [] }; }
         function newId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
@@ -834,7 +846,7 @@
                 : selectedActiveMonth;
                 
             const labelEl = document.getElementById('settings-month-label');
-            if(labelEl) labelEl.innerText = `Editing targets for ${monthText}`;
+            if(labelEl) labelEl.innerText = `Editing targets for ${monthText}` + (appSettings.monthlyData[selectedActiveMonth] ? '' : ' (carried over, save to set this month)');
             
             const mb = getMonthBudget(selectedActiveMonth);
             document.getElementById('set-income').value = mb.income || '';
@@ -861,6 +873,19 @@
             const income = parseFloat(document.getElementById('set-income').value) || 0;
             const fixedCost = parseFloat(document.getElementById('set-fixed').value) || 0;
             const investment = parseFloat(document.getElementById('set-invest').value) || 0;
+            // Freeze earlier months at what they show now, so editing this month never rewrites history
+            const pad = n => String(n).padStart(2, '0');
+            const expMonths = expenses.map(e => e.date && e.date.substring(0, 7)).filter(Boolean).sort();
+            let [fy, fm] = selectedActiveMonth.split('-').map(Number);
+            fm -= 6; while (fm < 1) { fm += 12; fy--; }
+            let lower = fy + '-' + pad(fm);
+            if (expMonths.length && expMonths[0] < lower) lower = expMonths[0];
+            let [y, m] = lower.split('-').map(Number);
+            while (y + '-' + pad(m) < selectedActiveMonth) {
+                const ym = y + '-' + pad(m);
+                if (!appSettings.monthlyData[ym]) appSettings.monthlyData[ym] = { ...getMonthBudget(ym) };
+                m++; if (m > 12) { m = 1; y++; }
+            }
             appSettings.monthlyData[selectedActiveMonth] = { income, fixedCost, investment };
             saveSettings();
             calculateSummaryCards(); renderTrendChart(); calculateForecast(); closeSettingsModal();
