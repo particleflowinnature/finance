@@ -545,7 +545,7 @@
             if (appSettings.monthlyData && appSettings.monthlyData[ym]) return appSettings.monthlyData[ym];
             const sorted = Object.keys(appSettings.monthlyData || {}).sort().reverse();
             for (let m of sorted) { if (m <= ym) return appSettings.monthlyData[m]; }
-            return { income: 0, fixedCost: 0, investment: 0 }; 
+            return appSettings.baseline || { income: 0, fixedCost: 0, investment: 0 }; 
         }
         
         function sanitizeImport(d) {
@@ -559,7 +559,7 @@
             const cats = Array.isArray(d.settings.categories) ? d.settings.categories.filter(c => typeof c === 'string' && c.trim()).map(c => c.slice(0, 50)) : [];
             const mData = d.settings.monthlyData || {};
             const aRules = d.settings.autoRules || [];
-            return { expenses: ex, settings: { monthlyData: mData, autoRules: aRules, categories: cats.length ? cats : [...defaultSettings.categories] } };
+            return { expenses: ex, settings: { baseline: d.settings.baseline || undefined, monthlyData: mData, autoRules: aRules, categories: cats.length ? cats : [...defaultSettings.categories] } };
         }
         function afterDataChange() { saveExpenses(); populateMonthDropdown(); populateCategoryDropdowns(); calculateStreak(); renderAll(); }
         function showUndoToast(msg, undo) {
@@ -599,11 +599,13 @@
                         appSettings.monthlyData = {};
                         const nowStr = localISO(new Date()).substring(0, 7);
                         appSettings.monthlyData[nowStr] = { income: legInc, fixedCost: legFix, investment: legInv };
+                        appSettings.baseline = { income: legInc, fixedCost: legFix, investment: legInv };
                         delete appSettings.income; delete appSettings.fixedCost; delete appSettings.investment;
                         saveSettings();
                     }
                     if (!appSettings.categories) appSettings.categories = [...defaultSettings.categories];
                     if (!appSettings.autoRules) appSettings.autoRules = [];
+                    if (!appSettings.baseline) { const ks = Object.keys(appSettings.monthlyData || {}).sort(); appSettings.baseline = ks.length ? { ...appSettings.monthlyData[ks[0]] } : { income: 0, fixedCost: 0, investment: 0 }; saveSettings(); }
                 } catch(e) { appSettings = freshSettings(); }
             } else {
                 appSettings = freshSettings();
