@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interactive Finance Tracker Dashboard</title>
     <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#10b981">
+    <meta name="theme-color" content="#10b981">
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com/3.4.17"></script>
     <!-- Chart.js CDN for interactive charts -->
@@ -133,7 +133,7 @@
                         </div>
                     </div>
                     <div class="text-3xl font-extrabold text-slate-900 mb-1 tracking-tight" id="card-income">₹0</div>
-                    <p class="text-xs font-semibold text-slate-400">Monthly baseline</p>
+                    <p class="text-xs font-semibold text-slate-400">Target for current month</p>
                 </div>
             </div>
 
@@ -426,22 +426,16 @@
         <div class="bg-white rounded-[2rem] max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-100 transform scale-95 transition-transform duration-300 relative overflow-y-auto max-h-[85vh] custom-scrollbar" id="settings-modal-content">
             <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-400 to-indigo-500"></div>
             
-            <div class="flex items-center justify-between mb-6 mt-2">
+            <div class="flex items-center justify-between mb-2 mt-2">
                 <div>
                     <h3 class="text-2xl font-extrabold text-slate-900 tracking-tight">Financial Settings</h3>
-                    <p class="text-sm font-medium text-slate-500 mt-1">Set your personal monthly baseline</p>
                 </div>
                 <button aria-label="Close" onclick="closeSettingsModal()" class="w-10 h-10 rounded-full bg-slate-100 text-slate-500 hover:bg-rose-50 hover:text-rose-600 flex items-center justify-center transition-colors cursor-pointer">
                     <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
-
-            <div class="bg-blue-50/50 border border-blue-100 p-4 rounded-xl mb-6 flex gap-3">
-                <i class="fa-solid fa-shield-halved text-blue-500 mt-0.5"></i>
-                <p class="text-xs font-medium text-blue-800 leading-relaxed">
-                    These settings are saved <strong>only to your current browser</strong>. Anyone else opening this site will have a blank slate and cannot see your numbers.
-                </p>
-            </div>
+            
+            <p id="settings-month-label" class="text-xs font-bold text-blue-600 mb-4 bg-blue-50 px-3 py-1.5 rounded-lg inline-block border border-blue-100">Editing budgets for...</p>
 
             <form id="settings-form" onsubmit="handleSettingsSubmit(event)" class="space-y-5">
                 <div>
@@ -489,7 +483,7 @@
                     <button type="button" onclick="resetSettingsToDefault()" class="text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors">Reset Defaults</button>
                     <div class="space-x-2">
                         <button type="button" onclick="closeSettingsModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-600 text-sm font-bold hover:bg-slate-200 transition-all cursor-pointer">Cancel</button>
-                        <button type="submit" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold shadow-lg shadow-blue-600/30 transition-all cursor-pointer">Save Changes</button>
+                        <button type="submit" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold shadow-lg shadow-blue-600/30 transition-all cursor-pointer">Save Month</button>
                     </div>
                 </div>
             </form>
@@ -500,18 +494,18 @@
     <script>
         // Default App Settings
         const defaultSettings = {
-            income: 0,
-            fixedCost: 0,
-            investment: 0,
-            categories: ['Housing', 'Groceries', 'Transport', 'Utilities', 'Entertainment', 'Personal', 'Other']
+            categories: ['Housing', 'Groceries', 'Transport', 'Utilities', 'Entertainment', 'Personal', 'Other'],
+            monthlyData: {} // Keyed by "YYYY-MM"
         };
 
         function localISO(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
-        function freshSettings() { return { ...defaultSettings, categories: [...defaultSettings.categories] }; }
+        function freshSettings() { return { categories: [...defaultSettings.categories], monthlyData: {} }; }
         function newId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
         function loadSkips() { try { return JSON.parse(localStorage.getItem('finance_tracker_skips') || '[]'); } catch (e) { return []; } }
         function addSkip(k) { const a = loadSkips(); if (!a.includes(k)) { a.push(k); localStorage.setItem('finance_tracker_skips', JSON.stringify(a)); } }
         function removeSkip(k) { localStorage.setItem('finance_tracker_skips', JSON.stringify(loadSkips().filter(x => x !== k))); }
+        function getMonthBudget(ym) { return appSettings.monthlyData[ym] || { income: 0, fixedCost: 0, investment: 0 }; }
+        
         function sanitizeImport(d) {
             if (!d || !Array.isArray(d.expenses) || !d.settings) return null;
             const num = v => Number.isFinite(parseFloat(v)) ? parseFloat(v) : 0;
@@ -521,7 +515,8 @@
                 ex.push({ id: String(e.id || newId()), name: e.name.slice(0, 100), amount: Number(e.amount), date: e.date, category: String(e.category || 'Other').slice(0, 50), payment: String(e.payment || 'UPI'), isInvestment: !!e.isInvestment, isFixed: !!e.isFixed, isRecurring: !!e.isRecurring });
             }
             const cats = Array.isArray(d.settings.categories) ? d.settings.categories.filter(c => typeof c === 'string' && c.trim()).map(c => c.slice(0, 50)) : [];
-            return { expenses: ex, settings: { income: num(d.settings.income), fixedCost: num(d.settings.fixedCost), investment: num(d.settings.investment), categories: cats.length ? cats : [...defaultSettings.categories] } };
+            const mData = d.settings.monthlyData || {};
+            return { expenses: ex, settings: { monthlyData: mData, categories: cats.length ? cats : [...defaultSettings.categories] } };
         }
         function afterDataChange() { saveExpenses(); populateMonthDropdown(); populateCategoryDropdowns(); calculateStreak(); renderAll(); }
         function showUndoToast(msg, undo) {
@@ -574,6 +569,22 @@
             if (savedSettings) {
                 try { 
                     appSettings = JSON.parse(savedSettings); 
+                    
+                    // Legacy Migration to Per-Month Structure
+                    if (appSettings.income !== undefined) {
+                        const legInc = appSettings.income || 0;
+                        const legFix = appSettings.fixedCost || 0;
+                        const legInv = appSettings.investment || 0;
+                        appSettings.monthlyData = {};
+                        
+                        const nowStr = localISO(new Date()).substring(0, 7);
+                        appSettings.monthlyData[nowStr] = { income: legInc, fixedCost: legFix, investment: legInv };
+                        
+                        delete appSettings.income;
+                        delete appSettings.fixedCost;
+                        delete appSettings.investment;
+                        saveSettings();
+                    }
                     if (!appSettings.categories) {
                         appSettings.categories = [...defaultSettings.categories];
                     }
@@ -610,7 +621,6 @@
             localStorage.setItem('finance_tracker_settings', JSON.stringify(appSettings));
         }
 
-        // --- NEW: Recurring Transactions Auto-Generator ---
         function processRecurringTransactions() {
             const todayISO = localISO(new Date());
             const cur = todayISO.substring(0, 7);
@@ -739,7 +749,6 @@
             document.getElementById('streak-count').innerText = streak;
         }
 
-        // Add / Edit Transaction Modal UX
         function openModal(isEdit = false) {
             const modal = document.getElementById('expense-modal');
             const title = modal.querySelector('h3');
@@ -851,11 +860,14 @@
             closeModal();
         }
 
-        // Settings Modal UX
         function openSettingsModal() {
-            document.getElementById('set-income').value = appSettings.income;
-            document.getElementById('set-fixed').value = appSettings.fixedCost;
-            document.getElementById('set-invest').value = appSettings.investment;
+            const selectEl = document.getElementById('active-month-select');
+            document.getElementById('settings-month-label').innerText = `Editing targets for ${selectEl.options[selectEl.selectedIndex].text}`;
+            
+            const mb = getMonthBudget(selectedActiveMonth);
+            document.getElementById('set-income').value = mb.income || '';
+            document.getElementById('set-fixed').value = mb.fixedCost || '';
+            document.getElementById('set-invest').value = mb.investment || '';
 
             renderCategoriesList();
 
@@ -882,23 +894,26 @@
 
         function handleSettingsSubmit(event) {
             event.preventDefault();
-            appSettings.income = parseFloat(document.getElementById('set-income').value) || 0;
-            appSettings.fixedCost = parseFloat(document.getElementById('set-fixed').value) || 0;
-            appSettings.investment = parseFloat(document.getElementById('set-invest').value) || 0;
+            const income = parseFloat(document.getElementById('set-income').value) || 0;
+            const fixedCost = parseFloat(document.getElementById('set-fixed').value) || 0;
+            const investment = parseFloat(document.getElementById('set-invest').value) || 0;
             
+            appSettings.monthlyData[selectedActiveMonth] = { income, fixedCost, investment };
             saveSettings();
+            
             calculateSummaryCards();
             renderTrendChart();
+            calculateForecast();
             closeSettingsModal();
-            showToast("Settings updated for your browser.", "success");
+            showToast("Monthly targets saved.", "success");
         }
 
         function resetSettingsToDefault() {
-            if (confirm("Reset to default baselines and categories?")) {
+            if (confirm("Reset completely to factory defaults for all months?")) {
                 appSettings = freshSettings();
-                document.getElementById('set-income').value = appSettings.income;
-                document.getElementById('set-fixed').value = appSettings.fixedCost;
-                document.getElementById('set-invest').value = appSettings.investment;
+                document.getElementById('set-income').value = '';
+                document.getElementById('set-fixed').value = '';
+                document.getElementById('set-invest').value = '';
                 saveSettings();
                 renderCategoriesList();
                 populateCategoryDropdowns();
@@ -993,10 +1008,9 @@
         }
 
         function calculateForecast() {
-            const { income, fixedCost, investment } = appSettings;
+            const { income, fixedCost, investment } = getMonthBudget(selectedActiveMonth);
             const totalFlexibleBudget = income - fixedCost - investment;
             
-            // Forecast only cares about Discretionary Spends (non-fixed, non-invest)
             const monthDiscSpent = expenses
                 .filter(item => item.date && item.date.startsWith(selectedActiveMonth) && !item.isInvestment && !item.isFixed)
                 .reduce((sum, item) => sum + item.amount, 0);
@@ -1101,14 +1115,13 @@
         }
 
         function calculateSummaryCards() {
-            const { income, fixedCost, investment } = appSettings;
+            const { income, fixedCost, investment } = getMonthBudget(selectedActiveMonth);
             const totalFlexibleBudget = income - fixedCost - investment;
 
             const monthDiscSpent = expenses
                 .filter(item => item.date && item.date.startsWith(selectedActiveMonth) && !item.isInvestment && !item.isFixed)
                 .reduce((sum, item) => sum + item.amount, 0);
 
-            // Calculate actual logged fixed costs to display on the card
             const monthFixedSpent = expenses
                 .filter(item => item.date && item.date.startsWith(selectedActiveMonth) && item.isFixed)
                 .reduce((sum, item) => sum + item.amount, 0);
@@ -1248,23 +1261,23 @@
             let totalSaved6Mo = 0;
 
             months.forEach(m => {
+                const mb = getMonthBudget(m);
                 const mExpenses = expenses.filter(e => e.date && e.date.startsWith(m));
                 
                 const spent = mExpenses.filter(e => !e.isInvestment && !e.isFixed).reduce((s, e) => s + e.amount, 0);
                 const invested = mExpenses.filter(e => e.isInvestment).reduce((s, e) => s + e.amount, 0);
                 const loggedFixed = mExpenses.filter(e => e.isFixed).reduce((s, e) => s + e.amount, 0);
                 
-                // Fallback: If no fixed costs are logged yet, use the baseline setting for historical charts
-                const finalFixed = loggedFixed > 0 ? loggedFixed : appSettings.fixedCost; 
+                const finalFixed = loggedFixed > 0 ? loggedFixed : mb.fixedCost; 
                 
                 spendData.push(spent);
                 investData.push(invested);
                 fixedData.push(finalFixed);
-                incomeData.push(appSettings.income);
+                incomeData.push(mb.income);
 
                 if (mExpenses.length > 0) {
-                    totalIncome6Mo += appSettings.income;
-                    const saved = appSettings.income - spent - finalFixed;
+                    totalIncome6Mo += mb.income;
+                    const saved = mb.income - spent - finalFixed;
                     totalSaved6Mo += saved > 0 ? saved : 0;
                 }
             });
@@ -1360,11 +1373,9 @@
             });
         }
 
-        // --- NEW: Toggle function for Doughnut Chart ---
         function setChartView(mode) {
             chartViewMode = mode;
             
-            // Update button styles
             const btnDisc = document.getElementById('btn-view-disc');
             const btnFixed = document.getElementById('btn-view-fixed');
             
@@ -1386,7 +1397,6 @@
             const catMap = {};
             expenses.forEach(item => {
                 if (item.date && item.date.startsWith(selectedActiveMonth) && !item.isInvestment) {
-                    // Filter based on view mode
                     if (chartViewMode === 'discretionary' && !item.isFixed) {
                         catMap[item.category] = (catMap[item.category] || 0) + item.amount;
                     } else if (chartViewMode === 'fixed' && item.isFixed) {
@@ -1450,7 +1460,6 @@
             });
         }
 
-        // --- Data Management Utilities ---
         function exportDataJSON() {
             if (expenses.length === 0) return showToast("No data to backup yet.", "info");
             
@@ -1481,7 +1490,6 @@
             reader.onload = function(e) {
                 try {
                     const importedData = JSON.parse(e.target.result);
-                    
                     const clean = sanitizeImport(importedData);
                     if (clean && !confirm('Restore will replace ALL current data in this browser. Continue?')) { event.target.value = ''; return; }
                     if (clean) {
@@ -1538,35 +1546,6 @@
             document.body.removeChild(link);
             
             showToast("CSV exported successfully.", "success");
-        }
-
-        function showToast(message, type = 'success') {
-            const container = document.getElementById('toast-container');
-            if(!container) return;
-            const toast = document.createElement('div');
-            
-            const icon = type === 'success' ? '<i class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>' : '<i class="fa-solid fa-circle-info text-blue-400 text-lg"></i>';
-            const bgClass = 'bg-slate-900 text-white';
-            
-            toast.className = `${bgClass} px-5 py-3.5 rounded-2xl shadow-2xl shadow-slate-900/20 text-sm font-bold flex items-center gap-3 transform translate-y-10 opacity-0 transition-all duration-500 ease-out z-50 border border-slate-700 pointer-events-auto`;
-            toast.innerHTML = `${icon} ${message}`;
-            
-            container.appendChild(toast);
-            
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    toast.classList.remove('translate-y-10', 'opacity-0');
-                });
-            });
-            
-            setTimeout(() => {
-                toast.classList.add('translate-y-10', 'opacity-0');
-                setTimeout(() => toast.remove(), 500);
-            }, 3500);
-        }
-
-        function escapeHtml(str) {
-            return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
 
         window.onload = () => { initApp(); postInit(); };
